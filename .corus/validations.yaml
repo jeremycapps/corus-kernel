@@ -1,0 +1,24 @@
+validations:
+  - id: validation.objective_spec.acceptance
+    label: Objective spec acceptance criteria met
+    artifact: artifact.objective_spec
+    contract: contract.product_strategy.objective_spec
+    required_status: validated
+
+  - id: validation.architecture_spec.consistency
+    label: Architecture spec object consistency
+    artifact: artifact.architecture_spec
+    contract: contract.systems_architecture.architecture_spec
+    required_status: validated
+
+  - id: validation.reducer_implementation.tests
+    label: Reducer tests pass
+    artifact: artifact.reducer_implementation
+    contract: contract.systems_engineer.reducer
+    required_status: validated
+
+  - id: validation.surface_rendering.review
+    label: Surface rendering review
+    artifact: artifact.surface_rendering
+    contract: contract.ui_ux.surface_rendering
+    required_status: validated

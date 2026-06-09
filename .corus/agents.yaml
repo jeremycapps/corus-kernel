@@ -1,0 +1,24 @@
+agents:
+  - id: agent.product_strategy
+    label: Product Strategy
+    surface: coordinate
+    role: owner
+    owns: demo thesis, acceptance criteria, pilot ask
+
+  - id: agent.systems_architecture
+    label: Systems Architecture
+    surface: coordinate
+    role: owner
+    owns: object consistency and boundary logic
+
+  - id: agent.systems_engineer
+    label: Systems Engineer
+    surface: implement
+    role: executor
+    owns: fixture, reducer, tests, audit output
+
+  - id: agent.ui_ux
+    label: UI/UX
+    surface: value
+    role: consumer
+    owns: workflow replay page and surface rendering

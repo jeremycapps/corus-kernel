@@ -1,0 +1,30 @@
+contracts:
+  - id: contract.product_strategy.objective_spec
+    label: Product Strategy owns objective spec
+    owner: agent.product_strategy
+    artifact: artifact.objective_spec
+    objective: objective.product_strategy_spec
+
+  - id: contract.systems_architecture.architecture_spec
+    label: Systems Architecture owns architecture spec
+    owner: agent.systems_architecture
+    artifact: artifact.architecture_spec
+    objective: objective.systems_architecture_spec
+    depends_on:
+      - artifact.objective_spec
+
+  - id: contract.systems_engineer.reducer
+    label: Systems Engineer owns reducer implementation
+    owner: agent.systems_engineer
+    artifact: artifact.reducer_implementation
+    objective: objective.systems_engineer_reducer
+    depends_on:
+      - artifact.architecture_spec
+
+  - id: contract.ui_ux.surface_rendering
+    label: UI/UX owns surface rendering
+    owner: agent.ui_ux
+    artifact: artifact.surface_rendering
+    objective: objective.ui_ux_surfaces
+    depends_on:
+      - artifact.architecture_spec

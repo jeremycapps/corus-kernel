@@ -1,0 +1,13 @@
+name: Corus v1 Self-Build
+version: "1.0"
+description: Deterministic self-build proof for Corus v1
+surfaces:
+  coordinate:
+    label: Coordinate
+    ledger_role: owner
+  implement:
+    label: Implement
+    ledger_role: executor
+  value:
+    label: Value
+    ledger_role: consumer

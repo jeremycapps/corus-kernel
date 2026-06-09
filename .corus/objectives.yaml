@@ -1,0 +1,28 @@
+objectives:
+  - id: objective.product_strategy_spec
+    label: Define product thesis and acceptance criteria
+    owner: agent.product_strategy
+    surface: coordinate
+    contracts:
+      - contract.product_strategy.objective_spec
+
+  - id: objective.systems_architecture_spec
+    label: Define object model and boundary logic
+    owner: agent.systems_architecture
+    surface: coordinate
+    contracts:
+      - contract.systems_architecture.architecture_spec
+
+  - id: objective.systems_engineer_reducer
+    label: Implement fixture, reducer, tests, and audit output
+    owner: agent.systems_engineer
+    surface: implement
+    contracts:
+      - contract.systems_engineer.reducer
+
+  - id: objective.ui_ux_surfaces
+    label: Render workflow replay and role surfaces
+    owner: agent.ui_ux
+    surface: value
+    contracts:
+      - contract.ui_ux.surface_rendering

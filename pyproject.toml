@@ -20,10 +20,11 @@ dev = [
 [project.scripts]
 corus-kernel = "corus_kernel.cli:main"
 corus-agents = "corus_agents.runner:main"
+corus-v1 = "corus_v1.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["corus_kernel*", "corus_agents*"]
+include = ["corus_kernel*", "corus_agents*", "corus_v1*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
