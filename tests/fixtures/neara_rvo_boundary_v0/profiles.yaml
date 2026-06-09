@@ -1,0 +1,16 @@
+profiles:
+  - id: profile.neara_director_customer_implementation
+    type: role
+    ref: role.neara_director_customer_implementation
+
+  - id: profile.neara_cva
+    type: role
+    ref: role.neara_cva
+
+  - id: profile.neara_fde
+    type: role
+    ref: role.neara_fde
+
+  - id: profile.corus_resolver
+    type: system
+    ref: system.corus

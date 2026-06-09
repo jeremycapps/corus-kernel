@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.DS_Store
+
+# Interpretation outputs (regenerate via: python -m corus_kernel interpret <fixture>)
+tests/fixtures/*/artifacts.candidate.yaml
+tests/fixtures/*/contracts.candidate.yaml
+tests/fixtures/*/interpretation_trace.json

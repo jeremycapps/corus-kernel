@@ -1,0 +1,12 @@
+roles:
+  - id: role.neara_director_customer_implementation
+    label: Director, Customer Implementation
+
+  - id: role.neara_cva
+    label: Customer Value Architect
+
+  - id: role.neara_fde
+    label: Forward Deployed Engineer
+
+  - id: role.neara_data_scientist
+    label: Data Scientist

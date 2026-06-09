@@ -1,0 +1,6 @@
+boundaries:
+  - id: boundary.neara.rvo.account_context
+    label: Neara RVO Account Context
+    orchestrator: profile.neara_director_customer_implementation
+    team: team.neara_account_team
+    subject: source.neara_rvo

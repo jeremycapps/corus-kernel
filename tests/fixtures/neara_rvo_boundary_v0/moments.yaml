@@ -1,0 +1,35 @@
+moments:
+  - id: moment.001
+    timpo: timpo.0001
+    actor: profile.neara_director_customer_implementation
+    via: orchestrate.account_context
+    object: source.neara_rvo
+    previous: null
+
+  - id: moment.002
+    timpo: timpo.0002
+    actor: profile.neara_cva
+    via: contract.cva.value_evidence.rvo
+    object: artifact.value_evidence.rvo
+    previous: moment.001
+
+  - id: moment.003
+    timpo: timpo.0003
+    actor: profile.neara_cva
+    via: contract.cva.roi_case.rvo
+    object: artifact.roi_case.rvo
+    previous: moment.001
+
+  - id: moment.004
+    timpo: timpo.0004
+    actor: profile.neara_fde
+    via: contract.fde.technical_evidence.rvo
+    object: artifact.technical_evidence.rvo
+    previous: moment.001
+
+  - id: moment.005
+    timpo: timpo.0005
+    actor: profile.neara_fde
+    via: contract.fde.integration_path.rvo
+    object: artifact.integration_path.rvo
+    previous: moment.001

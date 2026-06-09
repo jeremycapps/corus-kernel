@@ -1,0 +1,32 @@
+artifacts:
+  - id: artifact.value_evidence.rvo
+    type: value_evidence
+    label: RVO Value Evidence
+    origin:
+      - source.neara_cva_job_description
+    subject: source.neara_rvo
+    status: expected_missing
+
+  - id: artifact.roi_case.rvo
+    type: roi_case
+    label: RVO ROI Case
+    origin:
+      - source.neara_cva_job_description
+    subject: source.neara_rvo
+    status: expected_missing
+
+  - id: artifact.technical_evidence.rvo
+    type: technical_evidence
+    label: RVO Technical Evidence
+    origin:
+      - source.neara_fde_job_description
+    subject: source.neara_rvo
+    status: expected_missing
+
+  - id: artifact.integration_path.rvo
+    type: integration_path
+    label: RVO Integration Path
+    origin:
+      - source.neara_fde_job_description
+    subject: source.neara_rvo
+    status: expected_missing

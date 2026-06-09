@@ -1,0 +1,20 @@
+timpos:
+  - id: timpo.0001
+    t: 1
+    p: 1
+
+  - id: timpo.0002
+    t: 2
+    p: 1
+
+  - id: timpo.0003
+    t: 3
+    p: 1
+
+  - id: timpo.0004
+    t: 4
+    p: 1
+
+  - id: timpo.0005
+    t: 5
+    p: 1

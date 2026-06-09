@@ -1,0 +1,20 @@
+contracts:
+  - id: contract.cva.value_evidence.rvo
+    label: CVA Value Evidence for RVO
+    owner: role.neara_cva
+    artifact: artifact.value_evidence.rvo
+
+  - id: contract.cva.roi_case.rvo
+    label: CVA ROI Case for RVO
+    owner: role.neara_cva
+    artifact: artifact.roi_case.rvo
+
+  - id: contract.fde.technical_evidence.rvo
+    label: FDE Technical Evidence for RVO
+    owner: role.neara_fde
+    artifact: artifact.technical_evidence.rvo
+
+  - id: contract.fde.integration_path.rvo
+    label: FDE Integration Path for RVO
+    owner: role.neara_fde
+    artifact: artifact.integration_path.rvo
