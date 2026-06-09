@@ -25,3 +25,4 @@ tests/fixtures/*/admission_report.json
 tests/fixtures/*/audit_report.json
 tests/fixtures/*/surface.readout.txt
 tests/fixtures/*/explain.md
+tests/fixtures/*/source_packets.json

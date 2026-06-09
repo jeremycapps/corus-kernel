@@ -1,4 +1,4 @@
-Neara Risk and Value Optimization delivers asset-level intelligence for electric networks.
+Neara Risk and Value Optimization platform delivers asset-level intelligence solutions and customer value for electric networks.
 Evaluate and implement interventions with intervention scenarios and cost-benefit analyses.
 Provide auditable analyses and regulator-ready documentation for what-if questions.
 Risk and value optimization helps utilities reduce risk spend and improve capital confidence.
