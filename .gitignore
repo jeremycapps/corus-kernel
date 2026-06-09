@@ -10,3 +10,18 @@ build/
 tests/fixtures/*/artifacts.candidate.yaml
 tests/fixtures/*/contracts.candidate.yaml
 tests/fixtures/*/interpretation_trace.json
+tests/fixtures/*/bootstrap_report.json
+tests/fixtures/*/*.candidate.yaml
+tests/fixtures/*/roles.candidate.yaml
+tests/fixtures/*/teams.candidate.yaml
+tests/fixtures/*/profiles.candidate.yaml
+tests/fixtures/*/boundaries.candidate.yaml
+tests/fixtures/*/moments.candidate.yaml
+tests/fixtures/*/timpos.candidate.yaml
+
+# Agent runtime outputs
+tests/fixtures/*/derive.output.json
+tests/fixtures/*/admission_report.json
+tests/fixtures/*/audit_report.json
+tests/fixtures/*/surface.readout.txt
+tests/fixtures/*/explain.md

@@ -1,0 +1,4 @@
+Data Scientist builds digital twin electric networks analytics and metrics.
+Wildfire risk experiments, A/B tests, predictive model QA, and data pipelines.
+LiDAR and GIS data integration for model development.
+Low ego culture and nice-to-have Python experience.

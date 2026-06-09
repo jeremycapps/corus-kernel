@@ -1,0 +1,25 @@
+sources:
+  - id: source.neara_rvo
+    type: document
+    label: Neara Risk and Value Optimization
+    locator: sources/raw/One-pager - RVO.pdf
+
+  - id: source.neara_cva_job_description
+    type: document
+    label: Neara Customer Value Architect Job Description
+    locator: sources/raw/Customer Value Architect - USA (NYC) @ Neara.pdf
+
+  - id: source.neara_fde_job_description
+    type: document
+    label: Neara Forward Deployed Engineer Job Description
+    locator: sources/raw/Forward Deployed Engineer - USA (NYC) @ Neara.pdf
+
+  - id: source.neara_director_customer_implementation_job_description
+    type: document
+    label: Neara Director Customer Implementation Job Description
+    locator: sources/raw/Director, Customer Implementation @ Neara.pdf
+
+  - id: source.neara_data_scientist_job_description
+    type: document
+    label: Neara Data Scientist Job Description
+    locator: sources/raw/Data Scientist @ Neara.pdf

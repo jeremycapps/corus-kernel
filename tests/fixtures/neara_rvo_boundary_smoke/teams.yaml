@@ -1,0 +1,7 @@
+teams:
+  - id: team.neara_account_team
+    label: Neara Account Team
+    roles:
+      - role.neara_director_customer_implementation
+      - role.neara_cva
+      - role.neara_fde

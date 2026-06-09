@@ -14,14 +14,16 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=7.0",
+  "pypdf>=4.0",
 ]
 
 [project.scripts]
 corus-kernel = "corus_kernel.cli:main"
+corus-agents = "corus_agents.runner:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["corus_kernel*"]
+include = ["corus_kernel*", "corus_agents*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
