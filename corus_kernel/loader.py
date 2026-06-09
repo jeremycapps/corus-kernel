@@ -7,6 +7,25 @@ from typing import Any
 
 import yaml
 
+# Files read by derive. Candidate files from interpret are never loaded here.
+DERIVE_BUNDLE_FILES: dict[str, str] = {
+    "artifacts": "artifacts.yaml",
+    "contracts": "contracts.yaml",
+    "roles": "roles.yaml",
+    "teams": "teams.yaml",
+    "profiles": "profiles.yaml",
+    "boundaries": "boundaries.yaml",
+    "moments": "moments.yaml",
+    "timpos": "timpos.yaml",
+}
+
+# Written by interpret; gitignored; not used by derive.
+INTERPRET_CANDIDATE_FILES = (
+    "artifacts.candidate.yaml",
+    "contracts.candidate.yaml",
+    "interpretation_trace.json",
+)
+
 
 def _read_yaml(path: Path) -> dict[str, Any]:
     if not path.exists():
@@ -19,7 +38,12 @@ def _read_yaml(path: Path) -> dict[str, Any]:
 
 
 def load_bundle(fixture_dir: Path) -> dict[str, list[dict[str, Any]]]:
-    """Load all declared object collections from a fixture directory."""
+    """
+    Load admitted declared objects for derive.
+
+    Only reads artifacts.yaml and contracts.yaml (not *.candidate.yaml).
+    Sources are loaded from sources/sources.yaml; raw PDFs are never parsed.
+    """
     fixture_dir = Path(fixture_dir)
     bundle: dict[str, list[dict[str, Any]]] = {}
 
@@ -27,16 +51,9 @@ def load_bundle(fixture_dir: Path) -> dict[str, list[dict[str, Any]]]:
     sources_data = _read_yaml(sources_path)
     bundle["sources"] = list(sources_data.get("sources", []))
 
-    for collection, filename in (
-        ("artifacts", "artifacts.yaml"),
-        ("contracts", "contracts.yaml"),
-        ("roles", "roles.yaml"),
-        ("teams", "teams.yaml"),
-        ("profiles", "profiles.yaml"),
-        ("boundaries", "boundaries.yaml"),
-        ("moments", "moments.yaml"),
-        ("timpos", "timpos.yaml"),
-    ):
+    for collection, filename in DERIVE_BUNDLE_FILES.items():
+        if filename.endswith(".candidate.yaml"):
+            raise ValueError(f"derive must not read candidate file: {filename}")
         data = _read_yaml(fixture_dir / filename)
         bundle[collection] = list(data.get(collection, []))
 

@@ -87,6 +87,9 @@ def test_interpretation_produces_candidate_artifacts_and_contracts():
         )
         with (tmp_path / "sources" / "sources.yaml").open("w") as f:
             yaml.dump(sources_data, f)
+        (tmp_path / "interpret_fixture.py").write_text(
+            (FIXTURE_DIR / "interpret_fixture.py").read_text()
+        )
 
         result = write_interpretation(tmp_path)
         assert (tmp_path / "artifacts.candidate.yaml").exists()
@@ -295,20 +298,26 @@ def test_expected_missing_artifacts_unresolved():
 
 
 @pytest.mark.parametrize(
-    "statuses,expected",
+    "statuses,expected,reason",
     [
-        (["present", "present", "present", "present"], "ready"),
-        (["validated", "validated", "validated", "validated"], "ready"),
-        (["present", "validated", "present", "validated"], "ready"),
-        (["expected_missing", "present"], "unresolved"),
-        (["rejected"], "unresolved"),
+        (["present", "present", "present", "present"], "ready", "selected_artifacts_satisfied"),
+        (["validated", "validated", "validated", "validated"], "ready", "selected_artifacts_satisfied"),
+        (["present", "validated", "present", "validated"], "ready", "selected_artifacts_satisfied"),
+        (["expected_missing", "present"], "unresolved", "missing_or_rejected_artifacts"),
+        (["rejected"], "unresolved", "missing_or_rejected_artifacts"),
+        ([], "unresolved", "no_selected_artifacts"),
     ],
 )
-def test_artifact_status_coordination(statuses, expected):
-    boundary = {"id": "b", "subject": RVO_SOURCE}
+def test_artifact_status_coordination(statuses, expected, reason):
+    boundary = {
+        "id": "b",
+        "subject": RVO_SOURCE,
+        "team": "team.neara_account_team",
+    }
     artifacts = [{"id": f"a{i}", "status": s} for i, s in enumerate(statuses)]
     state = derive_context_for_state(boundary, artifacts)
     assert state["coordination"] == expected
+    assert state["reason"] == reason
 
 
 def test_present_validated_fixture_ready_when_all_satisfied():
@@ -366,18 +375,22 @@ def test_derive_output_shape():
         assert key in output["derived"]
 
 
-def test_derive_required_answer():
+def test_derive_answer_generated_from_context():
     output = derive_context(FIXTURE_DIR)
-    assert "RVO is the subject" in output["answer"]
-    assert "expected_missing" in output["answer"] or "unresolved" in output["answer"]
+    assert "is the subject of the" in output["answer"]
+    assert "Neara RVO Account Context" in output["answer"]
+    assert "unresolved" in output["answer"]
+    assert "expected_missing" in output["answer"]
 
 
-def test_trace_claims():
+def test_trace_claims_generated_from_reducer_events():
     output = derive_context(FIXTURE_DIR)
     claims = output["trace"]["claims"]
-    assert any("RVO is the subject" in c for c in claims)
-    assert any("Director profile orchestrates" in c for c in claims)
-    assert any("expected_missing" in c for c in claims)
+    assert any("Boundary" in c and "selected" in c for c in claims)
+    assert any("Eligible team roles" in c for c in claims)
+    assert any("Contract" in c and "selected" in c for c in claims)
+    assert any("status read: expected_missing" in c for c in claims)
+    assert any("Context state resolved: unresolved" in c for c in claims)
 
 
 def test_derive_contract_status_mapping():

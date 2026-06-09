@@ -1,46 +1,122 @@
-"""Validate declared object minimalism and references."""
+"""Validate declared objects: schema, references, and runtime warnings."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from corus_kernel.schemas import ALLOWED_FIELDS, COLLECTION_KEYS, MOMENT_FIELDS
+from corus_kernel.schemas import (
+    ALLOWED_FIELDS,
+    ARTIFACT_STATUSES,
+    COLLECTION_KEYS,
+    MOMENT_FIELDS,
+    PROFILE_TYPES,
+    REQUIRED_FIELDS,
+    SOURCE_TYPES,
+)
 
 
 class ValidationError(Exception):
-    """Raised when declared objects fail validation."""
+    """Raised when declared objects fail strict validation."""
 
 
-def validate_minimalism(bundle: dict[str, list[dict[str, Any]]]) -> None:
-    """Fail if any declared object contains fields outside its allowed set."""
+def _validate_item_fields(
+    collection: str,
+    object_type: str,
+    item: dict[str, Any],
+    errors: list[str],
+) -> None:
+    allowed = ALLOWED_FIELDS[object_type]
+    required = REQUIRED_FIELDS[object_type]
+    item_id = item.get("id", "?")
+
+    extra = set(item.keys()) - allowed
+    if extra:
+        errors.append(
+            f"{collection} item {item_id}: extra fields {sorted(extra)}"
+        )
+
+    missing = required - set(item.keys())
+    if missing:
+        errors.append(
+            f"{collection} item {item_id}: missing fields {sorted(missing)}"
+        )
+
+
+def _validate_enums(bundle: dict[str, list[dict[str, Any]]], errors: list[str]) -> None:
+    for source in bundle.get("sources", []):
+        source_type = source.get("type")
+        if source_type is not None and source_type not in SOURCE_TYPES:
+            errors.append(
+                f"sources item {source.get('id', '?')}: invalid type {source_type!r}"
+            )
+
+    for artifact in bundle.get("artifacts", []):
+        status = artifact.get("status")
+        if status is not None and status not in ARTIFACT_STATUSES:
+            errors.append(
+                f"artifacts item {artifact.get('id', '?')}: "
+                f"invalid status {status!r}"
+            )
+
+    for profile in bundle.get("profiles", []):
+        profile_type = profile.get("type")
+        if profile_type is not None and profile_type not in PROFILE_TYPES:
+            errors.append(
+                f"profiles item {profile.get('id', '?')}: "
+                f"invalid type {profile_type!r}"
+            )
+
+
+def validate_schema(bundle: dict[str, list[dict[str, Any]]]) -> None:
+    """Strict schema validation: required fields, allowed fields, and enums."""
     errors: list[str] = []
+
     for collection, object_type in COLLECTION_KEYS.items():
-        allowed = ALLOWED_FIELDS[object_type]
         for item in bundle.get(collection, []):
-            extra = set(item.keys()) - allowed
-            if extra:
-                errors.append(
-                    f"{collection} item {item.get('id', '?')}: extra fields {sorted(extra)}"
-                )
+            _validate_item_fields(collection, object_type, item, errors)
+
+    _validate_enums(bundle, errors)
+
     if errors:
         raise ValidationError("; ".join(errors))
 
 
-def validate_moment_minimalism(moments: list[dict[str, Any]]) -> None:
-    """Ensure moment atoms stay tiny."""
+def validate_minimalism(bundle: dict[str, list[dict[str, Any]]]) -> None:
+    """Alias for validate_schema."""
+    validate_schema(bundle)
+
+
+def validate_unique_ids(bundle: dict[str, list[dict[str, Any]]]) -> None:
+    """Fail on duplicate ids within a collection or across declared objects."""
     errors: list[str] = []
-    for moment in moments:
-        extra = set(moment.keys()) - MOMENT_FIELDS
-        if extra:
-            errors.append(
-                f"moment {moment.get('id', '?')}: extra fields {sorted(extra)}"
-            )
+    seen_global: dict[str, str] = {}
+
+    for collection in COLLECTION_KEYS:
+        seen_local: set[str] = set()
+        for item in bundle.get(collection, []):
+            item_id = item.get("id")
+            if not item_id:
+                continue
+            if item_id in seen_local:
+                errors.append(
+                    f"{collection}: duplicate id {item_id} within collection"
+                )
+            seen_local.add(item_id)
+
+            if item_id in seen_global:
+                errors.append(
+                    f"duplicate id {item_id} in {collection} "
+                    f"(already declared in {seen_global[item_id]})"
+                )
+            else:
+                seen_global[item_id] = collection
+
     if errors:
         raise ValidationError("; ".join(errors))
 
 
 def validate_references(bundle: dict[str, list[dict[str, Any]]]) -> None:
-    """Validate that all object references resolve."""
+    """Strict reference validation for declared object links."""
     ids: dict[str, set[str]] = {
         "source": {s["id"] for s in bundle.get("sources", [])},
         "artifact": {a["id"] for a in bundle.get("artifacts", [])},
@@ -57,9 +133,10 @@ def validate_references(bundle: dict[str, list[dict[str, Any]]]) -> None:
     errors: list[str] = []
 
     for artifact in bundle.get("artifacts", []):
-        if artifact.get("subject") not in ids["source"]:
+        subject = artifact.get("subject")
+        if subject and subject not in ids["source"]:
             errors.append(
-                f"artifact {artifact['id']}: subject {artifact.get('subject')} not found"
+                f"artifact {artifact['id']}: subject {subject} not found"
             )
         for origin in artifact.get("origin", []):
             if origin not in ids["source"]:
@@ -84,24 +161,13 @@ def validate_references(bundle: dict[str, list[dict[str, Any]]]) -> None:
 
     for profile in bundle.get("profiles", []):
         ref = profile.get("ref")
-        if profile.get("type") == "role" and ref not in ids["role"]:
+        profile_type = profile.get("type")
+        if profile_type == "role" and ref not in ids["role"]:
             errors.append(f"profile {profile['id']}: ref {ref} not found")
-        elif profile.get("type") == "system" and ref not in ids["system"]:
+        elif profile_type == "team" and ref not in ids["team"]:
             errors.append(f"profile {profile['id']}: ref {ref} not found")
-
-    for boundary in bundle.get("boundaries", []):
-        if boundary.get("orchestrator") not in ids["profile"]:
-            errors.append(
-                f"boundary {boundary['id']}: orchestrator {boundary.get('orchestrator')} not found"
-            )
-        if boundary.get("team") not in ids["team"]:
-            errors.append(
-                f"boundary {boundary['id']}: team {boundary.get('team')} not found"
-            )
-        if boundary.get("subject") not in ids["source"]:
-            errors.append(
-                f"boundary {boundary['id']}: subject {boundary.get('subject')} not found"
-            )
+        elif profile_type == "system" and ref not in ids["system"]:
+            errors.append(f"profile {profile['id']}: ref {ref} not found")
 
     for moment in bundle.get("moments", []):
         if moment.get("timpo") not in ids["timpo"]:
@@ -120,7 +186,49 @@ def validate_references(bundle: dict[str, list[dict[str, Any]]]) -> None:
         raise ValidationError("; ".join(errors))
 
 
+def collect_resolution_warnings(
+    bundle: dict[str, list[dict[str, Any]]],
+    boundary: dict[str, Any] | None,
+) -> list[str]:
+    """Non-fatal runtime warnings during boundary resolution."""
+    warnings: list[str] = []
+    sources_by_id = {s["id"]: s for s in bundle.get("sources", [])}
+    teams_by_id = {t["id"]: t for t in bundle.get("teams", [])}
+    profiles_by_id = {p["id"]: p for p in bundle.get("profiles", [])}
+
+    if boundary is None:
+        warnings.append("No boundary selected for resolution.")
+        return warnings
+
+    boundary_id = boundary.get("id", "?")
+    subject = boundary.get("subject")
+    if not subject:
+        warnings.append(f"Boundary {boundary_id}: subject missing; context blocked.")
+    elif subject not in sources_by_id:
+        warnings.append(
+            f"Boundary {boundary_id}: subject {subject} not found; context blocked."
+        )
+
+    team_id = boundary.get("team")
+    if not team_id:
+        warnings.append(f"Boundary {boundary_id}: team missing; context blocked.")
+    elif team_id not in teams_by_id:
+        warnings.append(f"Boundary {boundary_id}: team {team_id} not found.")
+
+    orchestrator = boundary.get("orchestrator")
+    if not orchestrator:
+        warnings.append(
+            f"Boundary {boundary_id}: orchestrator missing; context blocked."
+        )
+    elif orchestrator not in profiles_by_id:
+        warnings.append(
+            f"Boundary {boundary_id}: orchestrator {orchestrator} not found."
+        )
+
+    return warnings
+
+
 def validate_bundle(bundle: dict[str, list[dict[str, Any]]]) -> None:
-    validate_minimalism(bundle)
-    validate_moment_minimalism(bundle.get("moments", []))
+    validate_schema(bundle)
+    validate_unique_ids(bundle)
     validate_references(bundle)

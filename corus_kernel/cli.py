@@ -38,6 +38,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Path to fixture directory",
     )
     derive_parser.add_argument(
+        "--boundary",
+        default=None,
+        help="Boundary id to derive (required when multiple boundaries exist)",
+    )
+    derive_parser.add_argument(
         "-o",
         "--output",
         type=Path,
@@ -57,7 +62,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "derive":
-        output = derive_context(args.fixture_dir)
+        output = derive_context(args.fixture_dir, boundary_id=args.boundary)
         text = json.dumps(output, indent=2, sort_keys=True)
         if args.output:
             args.output.write_text(text + "\n", encoding="utf-8")

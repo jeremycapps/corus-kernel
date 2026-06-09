@@ -1,0 +1,402 @@
+{
+  "answer": "Neara Risk and Value Optimization is the subject of the Neara RVO Account Context boundary. Director, Customer Implementation orchestrates the boundary. Neara Account Team supplies the eligible team roles. Selected contracts: contract.cva.value_evidence.rvo, contract.cva.roi_case.rvo, contract.fde.technical_evidence.rvo, contract.fde.integration_path.rvo. Selected artifacts: RVO Integration Path (expected_missing), RVO ROI Case (expected_missing), RVO Technical Evidence (expected_missing), RVO Value Evidence (expected_missing). Derived context coordination is unresolved (missing_or_rejected_artifacts).",
+  "declared": {
+    "artifacts": [
+      {
+        "id": "artifact.value_evidence.rvo",
+        "label": "RVO Value Evidence",
+        "origin": [
+          "source.neara_cva_job_description"
+        ],
+        "status": "expected_missing",
+        "subject": "source.neara_rvo",
+        "type": "value_evidence"
+      },
+      {
+        "id": "artifact.roi_case.rvo",
+        "label": "RVO ROI Case",
+        "origin": [
+          "source.neara_cva_job_description"
+        ],
+        "status": "expected_missing",
+        "subject": "source.neara_rvo",
+        "type": "roi_case"
+      },
+      {
+        "id": "artifact.technical_evidence.rvo",
+        "label": "RVO Technical Evidence",
+        "origin": [
+          "source.neara_fde_job_description"
+        ],
+        "status": "expected_missing",
+        "subject": "source.neara_rvo",
+        "type": "technical_evidence"
+      },
+      {
+        "id": "artifact.integration_path.rvo",
+        "label": "RVO Integration Path",
+        "origin": [
+          "source.neara_fde_job_description"
+        ],
+        "status": "expected_missing",
+        "subject": "source.neara_rvo",
+        "type": "integration_path"
+      }
+    ],
+    "boundaries": [
+      {
+        "id": "boundary.neara.rvo.account_context",
+        "label": "Neara RVO Account Context",
+        "orchestrator": "profile.neara_director_customer_implementation",
+        "subject": "source.neara_rvo",
+        "team": "team.neara_account_team"
+      }
+    ],
+    "contracts": [
+      {
+        "artifact": "artifact.value_evidence.rvo",
+        "id": "contract.cva.value_evidence.rvo",
+        "label": "CVA Value Evidence for RVO",
+        "owner": "role.neara_cva"
+      },
+      {
+        "artifact": "artifact.roi_case.rvo",
+        "id": "contract.cva.roi_case.rvo",
+        "label": "CVA ROI Case for RVO",
+        "owner": "role.neara_cva"
+      },
+      {
+        "artifact": "artifact.technical_evidence.rvo",
+        "id": "contract.fde.technical_evidence.rvo",
+        "label": "FDE Technical Evidence for RVO",
+        "owner": "role.neara_fde"
+      },
+      {
+        "artifact": "artifact.integration_path.rvo",
+        "id": "contract.fde.integration_path.rvo",
+        "label": "FDE Integration Path for RVO",
+        "owner": "role.neara_fde"
+      }
+    ],
+    "moments": [
+      {
+        "actor": "profile.neara_director_customer_implementation",
+        "id": "moment.001",
+        "object": "source.neara_rvo",
+        "previous": null,
+        "timpo": "timpo.0001",
+        "via": "orchestrate.account_context"
+      },
+      {
+        "actor": "profile.neara_cva",
+        "id": "moment.002",
+        "object": "artifact.value_evidence.rvo",
+        "previous": "moment.001",
+        "timpo": "timpo.0002",
+        "via": "contract.cva.value_evidence.rvo"
+      },
+      {
+        "actor": "profile.neara_cva",
+        "id": "moment.003",
+        "object": "artifact.roi_case.rvo",
+        "previous": "moment.001",
+        "timpo": "timpo.0003",
+        "via": "contract.cva.roi_case.rvo"
+      },
+      {
+        "actor": "profile.neara_fde",
+        "id": "moment.004",
+        "object": "artifact.technical_evidence.rvo",
+        "previous": "moment.001",
+        "timpo": "timpo.0004",
+        "via": "contract.fde.technical_evidence.rvo"
+      },
+      {
+        "actor": "profile.neara_fde",
+        "id": "moment.005",
+        "object": "artifact.integration_path.rvo",
+        "previous": "moment.001",
+        "timpo": "timpo.0005",
+        "via": "contract.fde.integration_path.rvo"
+      }
+    ],
+    "profiles": [
+      {
+        "id": "profile.neara_director_customer_implementation",
+        "ref": "role.neara_director_customer_implementation",
+        "type": "role"
+      },
+      {
+        "id": "profile.neara_cva",
+        "ref": "role.neara_cva",
+        "type": "role"
+      },
+      {
+        "id": "profile.neara_fde",
+        "ref": "role.neara_fde",
+        "type": "role"
+      },
+      {
+        "id": "profile.corus_resolver",
+        "ref": "system.corus",
+        "type": "system"
+      }
+    ],
+    "roles": [
+      {
+        "id": "role.neara_director_customer_implementation",
+        "label": "Director, Customer Implementation"
+      },
+      {
+        "id": "role.neara_cva",
+        "label": "Customer Value Architect"
+      },
+      {
+        "id": "role.neara_fde",
+        "label": "Forward Deployed Engineer"
+      },
+      {
+        "id": "role.neara_data_scientist",
+        "label": "Data Scientist"
+      }
+    ],
+    "sources": [
+      {
+        "id": "source.neara_rvo",
+        "label": "Neara Risk and Value Optimization",
+        "locator": "sources/raw/One-pager - RVO.pdf",
+        "type": "document"
+      },
+      {
+        "id": "source.neara_cva_job_description",
+        "label": "Neara Customer Value Architect Job Description",
+        "locator": "sources/raw/Customer Value Architect - USA (NYC) @ Neara.pdf",
+        "type": "document"
+      },
+      {
+        "id": "source.neara_fde_job_description",
+        "label": "Neara Forward Deployed Engineer Job Description",
+        "locator": "sources/raw/Forward Deployed Engineer - USA (NYC) @ Neara.pdf",
+        "type": "document"
+      },
+      {
+        "id": "source.neara_director_customer_implementation_job_description",
+        "label": "Neara Director Customer Implementation Job Description",
+        "locator": "sources/raw/Director, Customer Implementation @ Neara.pdf",
+        "type": "document"
+      },
+      {
+        "id": "source.neara_data_scientist_job_description",
+        "label": "Neara Data Scientist Job Description",
+        "locator": "sources/raw/Data Scientist @ Neara.pdf",
+        "type": "document"
+      }
+    ],
+    "teams": [
+      {
+        "id": "team.neara_account_team",
+        "label": "Neara Account Team",
+        "roles": [
+          "role.neara_director_customer_implementation",
+          "role.neara_cva",
+          "role.neara_fde"
+        ]
+      }
+    ],
+    "timpos": [
+      {
+        "id": "timpo.0001",
+        "p": 1,
+        "t": 1
+      },
+      {
+        "id": "timpo.0002",
+        "p": 1,
+        "t": 2
+      },
+      {
+        "id": "timpo.0003",
+        "p": 1,
+        "t": 3
+      },
+      {
+        "id": "timpo.0004",
+        "p": 1,
+        "t": 4
+      },
+      {
+        "id": "timpo.0005",
+        "p": 1,
+        "t": 5
+      }
+    ]
+  },
+  "derived": {
+    "artifact_statuses": [
+      {
+        "artifact_id": "artifact.integration_path.rvo",
+        "status": "expected_missing"
+      },
+      {
+        "artifact_id": "artifact.roi_case.rvo",
+        "status": "expected_missing"
+      },
+      {
+        "artifact_id": "artifact.technical_evidence.rvo",
+        "status": "expected_missing"
+      },
+      {
+        "artifact_id": "artifact.value_evidence.rvo",
+        "status": "expected_missing"
+      }
+    ],
+    "context_state": {
+      "coordination": "unresolved",
+      "reason": "missing_or_rejected_artifacts"
+    },
+    "contexts": [
+      {
+        "boundary_id": "boundary.neara.rvo.account_context",
+        "context_state": {
+          "coordination": "unresolved",
+          "reason": "missing_or_rejected_artifacts"
+        },
+        "contract_statuses": [
+          {
+            "artifact_id": "artifact.value_evidence.rvo",
+            "contract_id": "contract.cva.value_evidence.rvo",
+            "owner": "role.neara_cva",
+            "status": "unsatisfied"
+          },
+          {
+            "artifact_id": "artifact.roi_case.rvo",
+            "contract_id": "contract.cva.roi_case.rvo",
+            "owner": "role.neara_cva",
+            "status": "unsatisfied"
+          },
+          {
+            "artifact_id": "artifact.technical_evidence.rvo",
+            "contract_id": "contract.fde.technical_evidence.rvo",
+            "owner": "role.neara_fde",
+            "status": "unsatisfied"
+          },
+          {
+            "artifact_id": "artifact.integration_path.rvo",
+            "contract_id": "contract.fde.integration_path.rvo",
+            "owner": "role.neara_fde",
+            "status": "unsatisfied"
+          }
+        ],
+        "moments": [
+          "moment.001",
+          "moment.002",
+          "moment.003",
+          "moment.004",
+          "moment.005"
+        ],
+        "orchestrator": "profile.neara_director_customer_implementation",
+        "selected_artifacts": [
+          "artifact.integration_path.rvo",
+          "artifact.roi_case.rvo",
+          "artifact.technical_evidence.rvo",
+          "artifact.value_evidence.rvo"
+        ],
+        "selected_contracts": [
+          "contract.cva.value_evidence.rvo",
+          "contract.cva.roi_case.rvo",
+          "contract.fde.technical_evidence.rvo",
+          "contract.fde.integration_path.rvo"
+        ],
+        "subject": "source.neara_rvo",
+        "team_id": "team.neara_account_team"
+      }
+    ],
+    "contract_statuses": [
+      {
+        "artifact_id": "artifact.value_evidence.rvo",
+        "contract_id": "contract.cva.value_evidence.rvo",
+        "owner": "role.neara_cva",
+        "status": "unsatisfied"
+      },
+      {
+        "artifact_id": "artifact.roi_case.rvo",
+        "contract_id": "contract.cva.roi_case.rvo",
+        "owner": "role.neara_cva",
+        "status": "unsatisfied"
+      },
+      {
+        "artifact_id": "artifact.technical_evidence.rvo",
+        "contract_id": "contract.fde.technical_evidence.rvo",
+        "owner": "role.neara_fde",
+        "status": "unsatisfied"
+      },
+      {
+        "artifact_id": "artifact.integration_path.rvo",
+        "contract_id": "contract.fde.integration_path.rvo",
+        "owner": "role.neara_fde",
+        "status": "unsatisfied"
+      }
+    ],
+    "role_views": [
+      {
+        "label": "Director, Customer Implementation",
+        "role_id": "role.neara_director_customer_implementation"
+      },
+      {
+        "label": "Customer Value Architect",
+        "role_id": "role.neara_cva"
+      },
+      {
+        "label": "Forward Deployed Engineer",
+        "role_id": "role.neara_fde"
+      },
+      {
+        "label": "Data Scientist",
+        "role_id": "role.neara_data_scientist"
+      }
+    ],
+    "team_views": [
+      {
+        "label": "Neara Account Team",
+        "roles": [
+          {
+            "label": "Director, Customer Implementation",
+            "role_id": "role.neara_director_customer_implementation"
+          },
+          {
+            "label": "Customer Value Architect",
+            "role_id": "role.neara_cva"
+          },
+          {
+            "label": "Forward Deployed Engineer",
+            "role_id": "role.neara_fde"
+          }
+        ],
+        "team_id": "team.neara_account_team"
+      }
+    ]
+  },
+  "hashes": {
+    "content": "992c63da319e58026e4165611deeda6170b9b3cc60d5450b3a31758e507eef7f",
+    "declared": "adfc0bca2cae738001f864541f493725027db84d175a3fc628b9999a7eb43dfb",
+    "derived": "7369b37d14ec6fccef80facff4b466b319b51818f20ce6bbe8ec7b7a8ed9f6ad"
+  },
+  "trace": {
+    "claims": [
+      "Boundary boundary.neara.rvo.account_context (Neara RVO Account Context) selected.",
+      "Orchestrator profile.neara_director_customer_implementation assigned to boundary.",
+      "Eligible team roles: Customer Value Architect, Director, Customer Implementation, Forward Deployed Engineer.",
+      "Contract contract.cva.value_evidence.rvo selected: owner on team and artifact.subject matches boundary subject.",
+      "Contract contract.cva.roi_case.rvo selected: owner on team and artifact.subject matches boundary subject.",
+      "Contract contract.fde.technical_evidence.rvo selected: owner on team and artifact.subject matches boundary subject.",
+      "Contract contract.fde.integration_path.rvo selected: owner on team and artifact.subject matches boundary subject.",
+      "Artifact artifact.integration_path.rvo status read: expected_missing.",
+      "Artifact artifact.roi_case.rvo status read: expected_missing.",
+      "Artifact artifact.technical_evidence.rvo status read: expected_missing.",
+      "Artifact artifact.value_evidence.rvo status read: expected_missing.",
+      "Context state resolved: unresolved (missing_or_rejected_artifacts)."
+    ],
+    "hash": "992c63da319e58026e4165611deeda6170b9b3cc60d5450b3a31758e507eef7f"
+  },
+  "warnings": []
+}

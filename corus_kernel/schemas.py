@@ -1,4 +1,4 @@
-"""Allowed fields for declared object types."""
+"""Allowed and required fields for declared object types."""
 
 ALLOWED_FIELDS = {
     "source": {"id", "type", "label", "locator"},
@@ -11,6 +11,28 @@ ALLOWED_FIELDS = {
     "moment": {"id", "timpo", "actor", "via", "object", "previous"},
     "timpo": {"id", "t", "p"},
 }
+
+REQUIRED_FIELDS = {
+    "source": {"id", "type", "label", "locator"},
+    "artifact": {"id", "type", "label", "origin", "subject", "status"},
+    "contract": {"id", "label", "owner", "artifact"},
+    "role": {"id", "label"},
+    "team": {"id", "label", "roles"},
+    "profile": {"id", "type", "ref"},
+    "boundary": {"id", "label", "orchestrator", "team", "subject"},
+    "moment": {"id", "timpo", "actor", "via", "object", "previous"},
+    "timpo": {"id", "t", "p"},
+}
+
+SOURCE_TYPES = frozenset({"link", "document", "data", "post"})
+ARTIFACT_STATUSES = frozenset({
+    "expected_missing",
+    "draft_present",
+    "present",
+    "validated",
+    "rejected",
+})
+PROFILE_TYPES = frozenset({"role", "team", "system"})
 
 COLLECTION_KEYS = {
     "sources": "source",
