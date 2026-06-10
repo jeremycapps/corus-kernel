@@ -55,7 +55,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     derive_parser.add_argument("-o", "--output", type=Path, default=None)
 
-    render_parser = subparsers.add_parser("render", help="Render role surfaces")
+    render_parser = subparsers.add_parser("render", help="Render derived contract states")
     render_parser.add_argument(
         "--project",
         type=Path,

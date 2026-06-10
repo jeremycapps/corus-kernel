@@ -9,13 +9,15 @@ import yaml
 
 CORUS_DIR = ".corus"
 
-BUNDLE_FILES: dict[str, str] = {
+REQUIRED_BUNDLE_FILES: dict[str, str] = {
     "project": "project.yaml",
     "agents": "agents.yaml",
     "objectives": "objectives.yaml",
     "artifacts": "artifacts.yaml",
     "contracts": "contracts.yaml",
-    "validations": "validations.yaml",
+}
+
+OPTIONAL_BUNDLE_FILES: dict[str, str] = {
     "moments": "moments.yaml",
 }
 
@@ -28,14 +30,20 @@ def _load_yaml(path: Path) -> dict[str, Any]:
 
 
 def load_project(project_dir: Path | str) -> dict[str, Any]:
-    """Load the full Corus v1 project bundle from project_dir/.corus/."""
+    """Load the Corus v1 project bundle from project_dir/.corus/."""
     project_dir = Path(project_dir)
     corus_dir = project_dir / CORUS_DIR
     if not corus_dir.is_dir():
         raise FileNotFoundError(f"Missing Corus project directory: {corus_dir}")
 
     bundle: dict[str, Any] = {"project_dir": str(project_dir)}
-    for key, filename in BUNDLE_FILES.items():
+    for key, filename in REQUIRED_BUNDLE_FILES.items():
+        path = corus_dir / filename
+        if not path.exists():
+            raise FileNotFoundError(f"Missing required Corus bundle file: {path}")
+        bundle[key] = _load_yaml(path)
+
+    for key, filename in OPTIONAL_BUNDLE_FILES.items():
         bundle[key] = _load_yaml(corus_dir / filename)
 
     return bundle

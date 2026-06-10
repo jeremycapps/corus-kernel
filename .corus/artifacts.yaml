@@ -1,24 +1,12 @@
 artifacts:
   - id: artifact.objective_spec
-    type: spec
-    label: Objective Specification
     status: expected_missing
-    producer: agent.product_strategy
 
   - id: artifact.architecture_spec
-    type: spec
-    label: Architecture Specification
     status: expected_missing
-    producer: agent.systems_architecture
 
   - id: artifact.reducer_implementation
-    type: implementation
-    label: Reducer Implementation
     status: expected_missing
-    producer: agent.systems_engineer
 
   - id: artifact.surface_rendering
-    type: implementation
-    label: Surface Rendering
     status: expected_missing
-    producer: agent.ui_ux

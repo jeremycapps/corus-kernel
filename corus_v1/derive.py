@@ -1,4 +1,4 @@
-"""Deterministic reducer for Corus v1 self-build state."""
+"""Deterministic reducer for Corus v1 agent coordination state."""
 
 from __future__ import annotations
 
@@ -6,185 +6,119 @@ from typing import Any
 
 from corus_v1.load import index_by_id
 
-SUBMITTED_STATUSES = frozenset({"present", "validated"})
-SATISFIED_CONTRACT_STATUSES = frozenset({"validated"})
-VALIDATION_REQUIRED_STATUSES = frozenset({"present"})
+OUTPUT_STATE_BY_ARTIFACT_STATUS = {
+    "expected_missing": "missing",
+    "present": "submitted",
+    "validated": "satisfied",
+    "rejected": "rejected",
+}
 
 
-def artifact_status(bundle: dict[str, Any], artifact_id: str) -> str:
-    artifacts = index_by_id(bundle.get("artifacts", {}).get("artifacts", []))
-    artifact = artifacts.get(artifact_id)
-    if artifact is None:
-        return "expected_missing"
-    return str(artifact.get("status", "expected_missing"))
+def artifacts_by_id(bundle: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    return index_by_id(bundle.get("artifacts", {}).get("artifacts", []))
 
 
-def dependencies_satisfied(bundle: dict[str, Any], depends_on: list[str] | None) -> bool:
-    if not depends_on:
-        return True
-    return all(
-        artifact_status(bundle, artifact_id) == "validated"
-        for artifact_id in depends_on
-    )
+def derive_readiness(contract: dict[str, Any], artifacts: dict[str, dict[str, Any]]) -> str:
+    """Readiness reducer over required artifacts only."""
+    required = contract.get("requires", [])
+    if all(artifacts[artifact_id]["status"] == "validated" for artifact_id in required):
+        return "unblocked"
+    return "blocked"
 
 
-def contract_satisfied(bundle: dict[str, Any], contract: dict[str, Any]) -> bool:
-    return artifact_status(bundle, contract["artifact"]) in SATISFIED_CONTRACT_STATUSES
+def derive_output_state(contract: dict[str, Any], artifacts: dict[str, dict[str, Any]]) -> str:
+    """Output reducer over the produced artifact only."""
+    status = artifacts[contract["produces"]]["status"]
+    return OUTPUT_STATE_BY_ARTIFACT_STATUS[str(status)]
 
 
-def objective_satisfied(bundle: dict[str, Any], objective: dict[str, Any]) -> bool:
-    contracts = index_by_id(bundle.get("contracts", {}).get("contracts", []))
-    for contract_id in objective.get("contracts", []):
-        contract = contracts.get(contract_id)
-        if contract is None or not contract_satisfied(bundle, contract):
-            return False
-    return True
+def derive_contract_state(
+    contract: dict[str, Any],
+    artifacts: dict[str, dict[str, Any]],
+) -> dict[str, Any]:
+    """Contract state = readiness over requires + output over produces."""
+    return {
+        "id": contract["id"],
+        "readiness": derive_readiness(contract, artifacts),
+        "output": derive_output_state(contract, artifacts),
+        "owner": contract["owner"],
+        "executor": contract["executor"],
+        "consumer": contract["consumer"],
+        "requires": list(contract.get("requires", [])),
+        "produces": contract["produces"],
+        "objective": contract.get("objective"),
+    }
 
 
-def validation_satisfied(bundle: dict[str, Any], validation: dict[str, Any]) -> bool:
-    required = validation.get("required_status", "validated")
-    status = artifact_status(bundle, validation["artifact"])
-    if required == "validated":
-        return status == "validated"
-    return status in SUBMITTED_STATUSES
-
-
-def derive_active_contracts(bundle: dict[str, Any]) -> list[dict[str, Any]]:
+def derive_contract_states(bundle: dict[str, Any]) -> list[dict[str, Any]]:
+    artifacts = artifacts_by_id(bundle)
     contracts = bundle.get("contracts", {}).get("contracts", [])
+    return [derive_contract_state(contract, artifacts) for contract in contracts]
+
+
+def _objective_lists(
+    objectives: list[dict[str, Any]],
+    contract_states: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    states_by_id = {state["id"]: state for state in contract_states}
     active: list[dict[str, Any]] = []
-    for contract in contracts:
-        if not contract_satisfied(bundle, contract):
-            active.append({
-                "id": contract["id"],
-                "owner": contract["owner"],
-                "artifact": contract["artifact"],
-                "objective": contract.get("objective"),
-                "depends_on": contract.get("depends_on", []),
-                "dependencies_satisfied": dependencies_satisfied(
-                    bundle, contract.get("depends_on")
-                ),
-            })
-    return active
+    satisfied: list[dict[str, Any]] = []
 
-
-def derive_satisfied_contracts(bundle: dict[str, Any]) -> list[dict[str, Any]]:
-    contracts = bundle.get("contracts", {}).get("contracts", [])
-    return [
-        {
-            "id": contract["id"],
-            "owner": contract["owner"],
-            "artifact": contract["artifact"],
-            "artifact_status": artifact_status(bundle, contract["artifact"]),
-        }
-        for contract in contracts
-        if contract_satisfied(bundle, contract)
-    ]
-
-
-def derive_active_objectives(bundle: dict[str, Any]) -> list[dict[str, Any]]:
-    objectives = bundle.get("objectives", {}).get("objectives", [])
-    return [
-        {
-            "id": objective["id"],
-            "label": objective["label"],
-            "owner": objective["owner"],
-            "surface": objective.get("surface"),
-            "contracts": objective.get("contracts", []),
-        }
-        for objective in objectives
-        if not objective_satisfied(bundle, objective)
-    ]
-
-
-def derive_satisfied_objectives(bundle: dict[str, Any]) -> list[dict[str, Any]]:
-    objectives = bundle.get("objectives", {}).get("objectives", [])
-    return [
-        {
-            "id": objective["id"],
-            "label": objective["label"],
-            "owner": objective["owner"],
-            "surface": objective.get("surface"),
-        }
-        for objective in objectives
-        if objective_satisfied(bundle, objective)
-    ]
-
-
-def derive_submitted_artifacts(bundle: dict[str, Any]) -> list[dict[str, Any]]:
-    artifacts = bundle.get("artifacts", {}).get("artifacts", [])
-    return [
-        {
-            "id": artifact["id"],
-            "label": artifact["label"],
-            "status": artifact["status"],
-            "producer": artifact.get("producer"),
-        }
-        for artifact in artifacts
-        if artifact.get("status") in SUBMITTED_STATUSES
-    ]
-
-
-def derive_validations_required(bundle: dict[str, Any]) -> list[dict[str, Any]]:
-    validations = bundle.get("validations", {}).get("validations", [])
-    required: list[dict[str, Any]] = []
-    for validation in validations:
-        if validation_satisfied(bundle, validation):
-            continue
-        status = artifact_status(bundle, validation["artifact"])
-        if status in VALIDATION_REQUIRED_STATUSES:
-            required.append({
-                "id": validation["id"],
-                "label": validation["label"],
-                "artifact": validation["artifact"],
-                "contract": validation.get("contract"),
-                "artifact_status": status,
-                "required_status": validation.get("required_status", "validated"),
-            })
-    return required
-
-
-def derive_executor_state(bundle: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    agents = index_by_id(bundle.get("agents", {}).get("agents", []))
-    active_contracts = derive_active_contracts(bundle)
-    blocked: list[dict[str, Any]] = []
-    unblocked: list[dict[str, Any]] = []
-
-    contracts_by_owner: dict[str, list[dict[str, Any]]] = {}
-    for contract in active_contracts:
-        contracts_by_owner.setdefault(contract["owner"], []).append(contract)
-
-    for owner_id, owner_contracts in sorted(contracts_by_owner.items()):
-        agent = agents.get(owner_id, {"id": owner_id, "label": owner_id})
-        deps_ok = all(contract["dependencies_satisfied"] for contract in owner_contracts)
+    for objective in objectives:
+        contract_ids = objective.get("contracts", [])
+        outputs = [
+            states_by_id[contract_id]["output"]
+            for contract_id in contract_ids
+            if contract_id in states_by_id
+        ]
         entry = {
-            "agent_id": owner_id,
-            "agent_label": agent.get("label", owner_id),
-            "surface": agent.get("surface"),
-            "role": agent.get("role"),
-            "active_contracts": [contract["id"] for contract in owner_contracts],
+            "id": objective["id"],
+            "intent": objective.get("intent"),
+            "contracts": contract_ids,
         }
-        if deps_ok:
-            unblocked.append(entry)
+        if outputs and all(output == "satisfied" for output in outputs):
+            satisfied.append(entry)
         else:
-            blocked.append(entry)
+            active.append(entry)
 
-    return blocked, unblocked
+    return active, satisfied
+
+
+def derive_convenience_lists(contract_states: list[dict[str, Any]]) -> dict[str, list[str]]:
+    """Convenience lists derived from contract state vectors."""
+    return {
+        "blocked_contracts": [
+            state["id"] for state in contract_states if state["readiness"] == "blocked"
+        ],
+        "unblocked_contracts": [
+            state["id"] for state in contract_states if state["readiness"] == "unblocked"
+        ],
+        "submitted_contracts": [
+            state["id"] for state in contract_states if state["output"] == "submitted"
+        ],
+        "satisfied_contracts": [
+            state["id"] for state in contract_states if state["output"] == "satisfied"
+        ],
+        "rejected_contracts": [
+            state["id"] for state in contract_states if state["output"] == "rejected"
+        ],
+    }
 
 
 def derive(bundle: dict[str, Any]) -> dict[str, Any]:
-    """Derive deterministic self-build state from a loaded project bundle."""
-    blocked, unblocked = derive_executor_state(bundle)
+    """Derive coordination state from declared objects."""
+    contract_states = derive_contract_states(bundle)
+    convenience = derive_convenience_lists(contract_states)
+    objectives = bundle.get("objectives", {}).get("objectives", [])
+    active_objectives, satisfied_objectives = _objective_lists(objectives, contract_states)
+
     return {
         "project": bundle.get("project", {}),
         "derived": {
-            "active_objectives": derive_active_objectives(bundle),
-            "active_contracts": derive_active_contracts(bundle),
-            "blocked_executors": blocked,
-            "unblocked_executors": unblocked,
-            "submitted_artifacts": derive_submitted_artifacts(bundle),
-            "validations_required": derive_validations_required(bundle),
-            "satisfied_contracts": derive_satisfied_contracts(bundle),
-            "satisfied_objectives": derive_satisfied_objectives(bundle),
+            "contract_states": contract_states,
+            **convenience,
+            "active_objectives": active_objectives,
+            "satisfied_objectives": satisfied_objectives,
         },
     }
 
@@ -198,8 +132,7 @@ def with_artifact_status(
     import copy
 
     updated = copy.deepcopy(bundle)
-    artifacts = updated.get("artifacts", {}).get("artifacts", [])
-    for artifact in artifacts:
+    for artifact in updated.get("artifacts", {}).get("artifacts", []):
         if artifact["id"] == artifact_id:
             artifact["status"] = status
             break

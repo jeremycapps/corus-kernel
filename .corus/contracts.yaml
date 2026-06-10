@@ -1,30 +1,35 @@
 contracts:
-  - id: contract.product_strategy.objective_spec
-    label: Product Strategy owns objective spec
+  - id: contract.objective_spec
+    objective: objective.self_build
     owner: agent.product_strategy
-    artifact: artifact.objective_spec
-    objective: objective.product_strategy_spec
+    executor: agent.product_strategy
+    consumer: agent.systems_architect
+    requires: []
+    produces: artifact.objective_spec
 
-  - id: contract.systems_architecture.architecture_spec
-    label: Systems Architecture owns architecture spec
-    owner: agent.systems_architecture
-    artifact: artifact.architecture_spec
-    objective: objective.systems_architecture_spec
-    depends_on:
+  - id: contract.architecture_spec
+    objective: objective.self_build
+    owner: agent.product_strategy
+    executor: agent.systems_architect
+    consumer: agent.ui_ux
+    requires:
       - artifact.objective_spec
+    produces: artifact.architecture_spec
 
-  - id: contract.systems_engineer.reducer
-    label: Systems Engineer owns reducer implementation
-    owner: agent.systems_engineer
-    artifact: artifact.reducer_implementation
-    objective: objective.systems_engineer_reducer
-    depends_on:
+  - id: contract.reducer_implementation
+    objective: objective.self_build
+    owner: agent.systems_architect
+    executor: agent.systems_architect
+    consumer: agent.ui_ux
+    requires:
       - artifact.architecture_spec
+    produces: artifact.reducer_implementation
 
-  - id: contract.ui_ux.surface_rendering
-    label: UI/UX owns surface rendering
-    owner: agent.ui_ux
-    artifact: artifact.surface_rendering
-    objective: objective.ui_ux_surfaces
-    depends_on:
-      - artifact.architecture_spec
+  - id: contract.surface_rendering
+    objective: objective.self_build
+    owner: agent.product_strategy
+    executor: agent.ui_ux
+    consumer: agent.product_strategy
+    requires:
+      - artifact.reducer_implementation
+    produces: artifact.surface_rendering
