@@ -7,18 +7,17 @@ from typing import Any
 
 def _agent_labels(bundle: dict[str, Any]) -> dict[str, str]:
     return {
-        agent["id"]: agent["label"]
+        agent["id"]: agent.get("label", agent["id"])
         for agent in bundle.get("agents", {}).get("agents", [])
     }
 
 
 def _format_contract_state(state: dict[str, Any], labels: dict[str, str]) -> str:
-    owner = labels.get(state["owner"], state["owner"])
     executor = labels.get(state["executor"], state["executor"])
     consumer = labels.get(state["consumer"], state["consumer"])
     return (
         f"  - {state['id']}: readiness={state['readiness']}, output={state['output']} "
-        f"(owner={owner}, executor={executor}, consumer={consumer})"
+        f"(executor={executor}, consumer={consumer})"
     )
 
 
@@ -38,21 +37,24 @@ def render(bundle: dict[str, Any], derived: dict[str, Any]) -> str:
 
     lines.append("Agents")
     for agent in bundle.get("agents", {}).get("agents", []):
-        lines.append(f"  - {agent['label']} ({agent['id']})")
+        lines.append(f"  - {labels.get(agent['id'], agent['id'])} ({agent['id']})")
     lines.append("")
 
     lines.append("Objectives")
     for objective in objectives:
         state = (
             "satisfied"
-            if any(item["id"] == objective["id"] for item in derived_state["satisfied_objectives"])
+            if any(
+                item["id"] == objective["id"] and item["satisfied"]
+                for item in derived_state["objectives"]
+            )
             else "active"
         )
         lines.append(f"  - [{state}] {objective.get('intent', objective['id'])}")
     lines.append("")
 
     lines.append("Contract states")
-    for state in derived_state["contract_states"]:
+    for state in derived_state["contracts"]:
         lines.append(_format_contract_state(state, labels))
     lines.append("")
 
@@ -62,6 +64,9 @@ def render(bundle: dict[str, Any], derived: dict[str, Any]) -> str:
     lines.append(f"  submitted_contracts: {derived_state['submitted_contracts']}")
     lines.append(f"  satisfied_contracts: {derived_state['satisfied_contracts']}")
     lines.append(f"  rejected_contracts: {derived_state['rejected_contracts']}")
+    lines.append(f"  partial_contracts: {derived_state['partial_contracts']}")
+    lines.append(f"  next_executor_actions: {[item['contract'] for item in derived_state['next_work']['executor_actions']]}")
+    lines.append(f"  next_consumer_actions: {[item['contract'] for item in derived_state['next_work']['consumer_actions']]}")
     lines.append("")
 
     return "\n".join(lines).strip() + "\n"

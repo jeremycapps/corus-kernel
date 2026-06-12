@@ -1,8 +1,16 @@
 objectives:
-  - id: objective.self_build
-    intent: Prove Corus can coordinate agents building Corus.
+  - id: objective.corus_self_build_engine
+    intent: Build and validate the smallest deterministic Corus coordination kernel.
+    agents:
+      - agent.product_strategy
+      - agent.systems_architect
+      - agent.ui_ux
+      - agent.systems_engineer
     contracts:
       - contract.objective_spec
-      - contract.architecture_spec
-      - contract.reducer_implementation
-      - contract.surface_rendering
+      - contract.agent_execution_instructions
+      - contract.object_model_spec
+      - contract.reducer_spec
+      - contract.runtime_status_update
+      - contract.work_packet_render
+      - contract.test_suite

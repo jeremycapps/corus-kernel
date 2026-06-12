@@ -1,12 +1,37 @@
 artifacts:
   - id: artifact.objective_spec
+    requires: []
     status: expected_missing
 
-  - id: artifact.architecture_spec
+  - id: artifact.agent_execution_instructions
+    requires:
+      - artifact.objective_spec
     status: expected_missing
 
-  - id: artifact.reducer_implementation
+  - id: artifact.object_model_spec
+    requires:
+      - artifact.objective_spec
+      - artifact.agent_execution_instructions
     status: expected_missing
 
-  - id: artifact.surface_rendering
+  - id: artifact.reducer_spec
+    requires:
+      - artifact.object_model_spec
+    status: expected_missing
+
+  - id: artifact.runtime_status_update
+    requires:
+      - artifact.reducer_spec
+    status: expected_missing
+
+  - id: artifact.work_packet_render
+    requires:
+      - artifact.reducer_spec
+      - artifact.runtime_status_update
+    status: expected_missing
+
+  - id: artifact.test_suite
+    requires:
+      - artifact.runtime_status_update
+      - artifact.work_packet_render
     status: expected_missing

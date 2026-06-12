@@ -1,35 +1,42 @@
 contracts:
   - id: contract.objective_spec
-    objective: objective.self_build
-    owner: agent.product_strategy
     executor: agent.product_strategy
     consumer: agent.systems_architect
-    requires: []
-    produces: artifact.objective_spec
-
-  - id: contract.architecture_spec
-    objective: objective.self_build
-    owner: agent.product_strategy
-    executor: agent.systems_architect
-    consumer: agent.ui_ux
-    requires:
+    produces:
       - artifact.objective_spec
-    produces: artifact.architecture_spec
 
-  - id: contract.reducer_implementation
-    objective: objective.self_build
-    owner: agent.systems_architect
+  - id: contract.agent_execution_instructions
+    executor: agent.product_strategy
+    consumer: agent.systems_engineer
+    produces:
+      - artifact.agent_execution_instructions
+
+  - id: contract.object_model_spec
     executor: agent.systems_architect
     consumer: agent.ui_ux
-    requires:
-      - artifact.architecture_spec
-    produces: artifact.reducer_implementation
+    produces:
+      - artifact.object_model_spec
 
-  - id: contract.surface_rendering
-    objective: objective.self_build
-    owner: agent.product_strategy
+  - id: contract.reducer_spec
+    executor: agent.systems_architect
+    consumer: agent.systems_engineer
+    produces:
+      - artifact.reducer_spec
+
+  - id: contract.runtime_status_update
+    executor: agent.systems_engineer
+    consumer: agent.product_strategy
+    produces:
+      - artifact.runtime_status_update
+
+  - id: contract.work_packet_render
     executor: agent.ui_ux
     consumer: agent.product_strategy
-    requires:
-      - artifact.reducer_implementation
-    produces: artifact.surface_rendering
+    produces:
+      - artifact.work_packet_render
+
+  - id: contract.test_suite
+    executor: agent.systems_engineer
+    consumer: agent.product_strategy
+    produces:
+      - artifact.test_suite

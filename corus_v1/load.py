@@ -17,10 +17,6 @@ REQUIRED_BUNDLE_FILES: dict[str, str] = {
     "contracts": "contracts.yaml",
 }
 
-OPTIONAL_BUNDLE_FILES: dict[str, str] = {
-    "moments": "moments.yaml",
-}
-
 
 def _load_yaml(path: Path) -> dict[str, Any]:
     if not path.exists():
@@ -42,9 +38,6 @@ def load_project(project_dir: Path | str) -> dict[str, Any]:
         if not path.exists():
             raise FileNotFoundError(f"Missing required Corus bundle file: {path}")
         bundle[key] = _load_yaml(path)
-
-    for key, filename in OPTIONAL_BUNDLE_FILES.items():
-        bundle[key] = _load_yaml(corus_dir / filename)
 
     return bundle
 
