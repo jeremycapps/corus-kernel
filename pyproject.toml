@@ -24,7 +24,7 @@ corus-v1 = "corus_v1.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["corus_kernel*", "corus_agents*", "corus_v1*"]
+include = ["corus_kernel*", "corus_agents*", "corus_v1*", "demo*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
