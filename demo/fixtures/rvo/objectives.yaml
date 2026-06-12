@@ -1,0 +1,13 @@
+objectives:
+  - id: objective.rvo_customer_action
+    intent: Coordinate RVO-style risk intelligence into customer implementation value.
+    agents:
+      - agent.director_owner
+      - agent.fde_executor
+      - agent.cva_consumer
+    contracts:
+      - contract.value_evidence
+      - contract.technical_evidence
+      - contract.customer_system_mapping
+      - contract.integration_path
+      - contract.roi_assumption

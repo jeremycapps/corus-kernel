@@ -1,0 +1,23 @@
+artifacts:
+  - id: artifact.value_evidence
+    requires: []
+    status: validated
+
+  - id: artifact.technical_evidence
+    requires: []
+    status: validated
+
+  - id: artifact.customer_system_mapping
+    requires: []
+    status: expected_missing
+
+  - id: artifact.integration_path
+    requires:
+      - artifact.technical_evidence
+      - artifact.customer_system_mapping
+    status: expected_missing
+
+  - id: artifact.roi_assumption
+    requires:
+      - artifact.value_evidence
+    status: expected_missing

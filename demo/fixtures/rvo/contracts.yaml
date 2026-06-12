@@ -1,0 +1,30 @@
+contracts:
+  - id: contract.value_evidence
+    executor: agent.cva_consumer
+    consumer: agent.director_owner
+    produces:
+      - artifact.value_evidence
+
+  - id: contract.technical_evidence
+    executor: agent.fde_executor
+    consumer: agent.cva_consumer
+    produces:
+      - artifact.technical_evidence
+
+  - id: contract.customer_system_mapping
+    executor: agent.fde_executor
+    consumer: agent.cva_consumer
+    produces:
+      - artifact.customer_system_mapping
+
+  - id: contract.integration_path
+    executor: agent.fde_executor
+    consumer: agent.cva_consumer
+    produces:
+      - artifact.integration_path
+
+  - id: contract.roi_assumption
+    executor: agent.cva_consumer
+    consumer: agent.director_owner
+    produces:
+      - artifact.roi_assumption

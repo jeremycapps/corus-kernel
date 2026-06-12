@@ -1,0 +1,4 @@
+agents:
+  - id: agent.director_owner
+  - id: agent.fde_executor
+  - id: agent.cva_consumer

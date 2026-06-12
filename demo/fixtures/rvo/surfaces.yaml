@@ -1,0 +1,27 @@
+surfaces:
+  coordinate:
+    before: Coordinate = unresolved
+    after_next_action_prefix: "Coordinate = updated next action:"
+
+  implement:
+    before: Implement = blocked/missing
+    after_template: "Implement = {integration_path} {integration_path_status}, {customer_mapping} {customer_mapping_status}"
+    artifacts:
+      integration_path:
+        id: artifact.integration_path
+        label: implementation path
+      customer_mapping:
+        id: artifact.customer_system_mapping
+        label: customer mapping
+
+  value:
+    before: Value = partially supported
+    after_template: "Value = {value_narrative} {value_narrative_status}, {cost_impact} {cost_impact_status}"
+    artifacts:
+      value_narrative:
+        id: artifact.value_evidence
+        label: value narrative
+    claims:
+      cost_impact:
+        id: claim.unsupported_cost_impact
+        label: cost impact

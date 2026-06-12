@@ -107,7 +107,9 @@ def apply_event(state: dict[str, Any], event: dict[str, Any]) -> dict[str, Any]:
     )
     event_type = event["type"]
 
-    if event_type == "artifact_status_set":
+    if event_type == "context_opened":
+        pass
+    elif event_type == "artifact_status_set":
         _set_artifact_status(next_state, event)
     elif event_type == "claim_status_set":
         _set_claim_status(next_state, event)
