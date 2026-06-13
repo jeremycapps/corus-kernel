@@ -14,6 +14,7 @@ from corus_v1.derive import derive
 
 CLAIM_STATUSES = frozenset({
     "candidate",
+    "supported",
     "admitted",
     "rejected",
     "missing_evidence",
@@ -107,7 +108,7 @@ def apply_event(state: dict[str, Any], event: dict[str, Any]) -> dict[str, Any]:
     )
     event_type = event["type"]
 
-    if event_type == "context_opened":
+    if event_type in {"context_opened", "next_work_derived"}:
         pass
     elif event_type == "artifact_status_set":
         _set_artifact_status(next_state, event)

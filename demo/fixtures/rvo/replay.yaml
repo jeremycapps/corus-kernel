@@ -1,0 +1,215 @@
+title: RVO Account Context Replay
+framing: Watch the same context update across three role surfaces.
+core_line: Corus does not jump from unresolved to solved. It shows how context becomes clearer one event at a time.
+
+object_labels:
+  artifact.customer_system_mapping: Customer system mapping
+  artifact.integration_path: Implementation path
+  artifact.roi_assumption: ROI assumption
+  artifact.value_evidence: Value evidence
+  claim.cost_impact: Specific cost impact claim
+  claim.value_narrative: Value narrative
+  contract.customer_system_mapping: Customer system mapping
+  contract.integration_path: Implementation path
+  contract.roi_assumption: ROI assumption
+  contract.value_evidence: Value evidence
+  source.neara_rvo: Neara RVO public reference
+
+initial_claims:
+  - id: claim.value_narrative
+    status: candidate
+    text: RVO-style intelligence may support customer conversations around planning, prioritization, and operational risk.
+    artifact: artifact.value_evidence
+    evidence_refs: []
+
+  - id: claim.cost_impact
+    status: candidate
+    text: Specific dollar-impact claim is not supported by admitted evidence.
+    artifact: artifact.roi_assumption
+    evidence_refs: []
+
+steps:
+  - id: step_0
+    label: Context opened
+    event_text: Director opens RVO account context.
+    state_kind: kernel
+    state_text: Expected artifacts exist, but most are missing.
+    primary_surface: coordinate
+    changed:
+      - Context created
+      - Required artifacts are expected but missing
+    events:
+      - type: context_opened
+        context: objective.rvo_customer_action
+        label: Director opens RVO account context
+    surfaces:
+      coordinate:
+        status: Unresolved
+        body: Context opened. Required artifacts are missing.
+      implement:
+        status: Missing
+        body: No implementation path has been submitted.
+      value:
+        status: Source-bounded
+        body: General value context exists, but no validated value evidence yet.
+    takeaway: The team has a context, but it is not actionable yet.
+
+  - id: step_1
+    label: Source attached
+    event_text: RVO/public source reference is added.
+    state_kind: demo
+    state_text: source.neara_rvo = attached
+    primary_surface: coordinate
+    changed:
+      - Neara RVO public reference attached
+      - Artifact readiness does not change
+    events:
+      - type: source_ref_added
+        source: source.neara_rvo
+        label: Neara RVO public source
+        locator: demo://sources/neara-rvo
+    surfaces:
+      coordinate:
+        status: Unresolved
+        body: Source context is now attached, but artifacts are still missing.
+      implement:
+        status: Missing
+        body: RVO-style context may inform implementation planning, but no technical path exists yet.
+      value:
+        status: Source-bounded
+        body: A general value narrative can be discussed, but it remains source-bounded.
+    takeaway: A source exists, but source presence is not the same as readiness.
+
+  - id: step_2
+    label: Value evidence present
+    event_text: CVA-facing value claim is marked supported.
+    state_kind: demo
+    state_text: claim.value_narrative = supported; artifact.value_evidence = present
+    primary_surface: value
+    changed:
+      - Value narrative marked supported
+      - Value evidence is present
+      - Implementation work remains unresolved
+    events:
+      - type: claim_status_set
+        claim: claim.value_narrative
+        status: supported
+        text: RVO-style intelligence can support customer conversations around planning, prioritization, and operational risk.
+        artifact: artifact.value_evidence
+        source_refs:
+          - source.neara_rvo
+        evidence_refs:
+          - source.neara_rvo
+      - type: artifact_status_set
+        artifact: artifact.value_evidence
+        status: present
+    surfaces:
+      coordinate:
+        status: Unresolved
+        body: Value evidence is now present. Implementation work remains missing.
+      implement:
+        status: Missing
+        body: No change. Technical implementation is still unresolved.
+      value:
+        status: Supported
+        body: "Value narrative is supported: RVO-style intelligence can support customer conversations around planning, prioritization, and operational risk."
+    takeaway: The value surface updates, but the implementation surface does not magically become ready.
+
+  - id: step_3
+    label: Cost claim rejected
+    event_text: Specific dollar-impact claim is rejected.
+    state_kind: demo
+    state_text: claim.cost_impact = rejected; artifact.roi_assumption = expected_missing
+    primary_surface: value
+    changed:
+      - Specific dollar-impact claim rejected
+      - ROI assumption remains missing
+    events:
+      - type: claim_status_set
+        claim: claim.cost_impact
+        status: rejected
+        text: Do not claim specific dollar impact until customer-approved ROI assumptions are admitted.
+        artifact: artifact.roi_assumption
+        evidence_refs: []
+    surfaces:
+      coordinate:
+        status: Unresolved
+        body: ROI assumption is now a visible missing artifact.
+      implement:
+        status: Missing
+        body: No implementation change.
+      value:
+        status: Guarded
+        body: Do not claim specific dollar impact. Customer-approved ROI assumptions are missing.
+    takeaway: Corus protects the customer-facing story from overclaiming.
+
+  - id: step_4
+    label: Implementation path present
+    event_text: FDE submits preliminary implementation path.
+    state_kind: kernel
+    state_text: artifact.integration_path = present
+    primary_surface: implement
+    changed:
+      - Implementation path submitted
+      - Customer system mapping remains missing
+    events:
+      - type: artifact_status_set
+        artifact: artifact.integration_path
+        status: present
+    surfaces:
+      coordinate:
+        status: Actionable
+        body: "Implementation path is present. Remaining next actions: customer system mapping, ROI assumption."
+      implement:
+        status: Partially supported
+        body: Implementation path is present, but customer system mapping is missing.
+      value:
+        status: Source-bounded
+        body: Value narrative remains supported. Cost impact remains rejected.
+    takeaway: The context is still not done, but the next work is now specific.
+
+  - id: step_5
+    label: Remaining work exposed
+    event_text: Reducer derives next work.
+    state_kind: kernel
+    state_text: "next_work.executor_actions: contract.customer_system_mapping, contract.roi_assumption"
+    primary_surface: coordinate
+    changed:
+      - Customer system mapping is still missing
+      - ROI assumption is still missing
+      - Next executor actions are now explicit
+      - No new artifact was added in this step
+    events:
+      - type: next_work_derived
+        label: Reducer exposes the remaining work
+    surfaces:
+      coordinate:
+        status: Actionable
+        body: "Corus did not mark the context as solved. It derived the next accountable actions from current artifact and claim states."
+        next:
+          - Customer system mapping
+          - ROI assumption
+        validation:
+          - Value evidence
+        why: Implementation path is present, value narrative is supported, cost impact is rejected, and required proof is still missing.
+      implement:
+        status: Partially supported
+        body: Implementation path submitted. Validation blocked by customer system mapping.
+        present:
+          - Implementation path
+        missing:
+          - Customer system mapping
+          - Workflow owner
+          - Acceptance criteria
+        next:
+          - Confirm customer systems before creating implementation tickets
+      value:
+        status: Source-bounded
+        body: Use the supported value narrative, but avoid financial claims until ROI assumptions are admitted.
+        supported:
+          - General value narrative
+        rejected:
+          - Specific dollar impact
+        next:
+          - Avoid financial claims until ROI assumptions are admitted
+    takeaway: Corus turns unresolved context into accountable next action.

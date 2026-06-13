@@ -1,7 +1,7 @@
 artifacts:
   - id: artifact.value_evidence
     requires: []
-    status: validated
+    status: expected_missing
 
   - id: artifact.technical_evidence
     requires: []
@@ -18,6 +18,5 @@ artifacts:
     status: expected_missing
 
   - id: artifact.roi_assumption
-    requires:
-      - artifact.value_evidence
+    requires: []
     status: expected_missing

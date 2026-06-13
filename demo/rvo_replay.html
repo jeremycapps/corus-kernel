@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RVO Account Context Replay</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1d252c;
+      --muted: #63707b;
+      --line: #d7dde2;
+      --panel: #ffffff;
+      --page: #f5f7f8;
+      --accent: #1f6f68;
+      --amber: #8a5a00;
+      --rose: #9d2f3d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+    main {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+    header {
+      padding: 24px 32px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfd;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      line-height: 1.15;
+      font-weight: 720;
+    }
+    .framing {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+      gap: 0;
+      min-height: 0;
+    }
+    aside {
+      border-right: 1px solid var(--line);
+      background: #edf1f2;
+      padding: 18px;
+    }
+    .timeline-title {
+      margin: 0 0 12px;
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .step-button {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      align-items: start;
+      gap: 8px;
+      min-height: 52px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--ink);
+      text-align: left;
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font: inherit;
+    }
+    .step-button:hover { background: #f8fafb; }
+    .step-button.active {
+      background: var(--panel);
+      border-color: #b9c7c5;
+    }
+    .marker {
+      display: inline-flex;
+      width: 24px;
+      height: 24px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #d8e6e3;
+      color: #154d48;
+      font-size: 12px;
+      font-weight: 700;
+      flex: none;
+    }
+    .step-button.active .marker { background: var(--accent); color: white; }
+    .step-label {
+      display: block;
+      font-size: 14px;
+      line-height: 1.25;
+      font-weight: 680;
+    }
+    .step-event {
+      display: block;
+      margin-top: 3px;
+      font-size: 12px;
+      line-height: 1.25;
+      color: var(--muted);
+    }
+    .content {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto auto auto 1fr;
+      gap: 18px;
+      padding: 22px 28px;
+    }
+    .step-head {
+      display: grid;
+      gap: 7px;
+      max-width: 980px;
+    }
+    .kicker {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 720;
+      text-transform: uppercase;
+    }
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.18;
+    }
+    .event {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .changed-strip {
+      background: #eef7f5;
+      border: 1px solid #b9d6d1;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .changed-strip h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: #16534d;
+      text-transform: uppercase;
+    }
+    .changed-strip ul {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 4px;
+      color: #26363f;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+    .surface-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .surface-grid.primary-coordinate {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .surface-grid.primary-coordinate .surface-card.primary {
+      grid-column: 1 / -1;
+      min-height: 210px;
+      border-color: #9ccbc4;
+      box-shadow: 0 1px 0 rgba(31, 111, 104, 0.12);
+    }
+    .surface-card, .drawer {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    .surface-card {
+      min-height: 190px;
+      padding: 16px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 12px;
+    }
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .surface-card h3 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.2;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 3px 9px;
+      background: #edf1f2;
+      color: #34444f;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .surface-card.primary .pill {
+      background: #d8ebe7;
+      color: #16534d;
+    }
+    .surface-card p {
+      margin: 0;
+      line-height: 1.45;
+      color: #2c3842;
+      font-size: 15px;
+    }
+    .meta {
+      border-top: 1px solid var(--line);
+      padding-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      min-height: 42px;
+    }
+    .drawer {
+      min-height: 220px;
+      padding: 0;
+    }
+    .drawer summary {
+      cursor: pointer;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      font-weight: 720;
+    }
+    .proof-grid {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      align-content: start;
+    }
+    .drawer h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .drawer ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #2c3842;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .raw-objects {
+      grid-column: 1 / -1;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+    }
+    .raw-objects summary {
+      border: 0;
+      padding: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .raw-columns {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .takeaway {
+      grid-column: 1 / -1;
+      margin-top: 4px;
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      color: var(--ink);
+      font-weight: 650;
+    }
+    .core-line {
+      grid-column: 1 / -1;
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    @media (max-width: 840px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { border-right: 0; border-bottom: 1px solid var(--line); }
+      .surface-grid, .surface-grid.primary-coordinate, .proof-grid, .raw-columns { grid-template-columns: 1fr; }
+      header, .content { padding-left: 18px; padding-right: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>RVO Account Context Replay</h1>
+      <p class="framing">Watch the same context update across three role surfaces.</p>
+    </header>
+    <section class="layout">
+      <aside>
+        <p class="timeline-title">Replay timeline</p>
+        <div id="timeline"></div>
+      </aside>
+      <section class="content">
+        <div class="step-head">
+          <span class="kicker" id="step-kicker"></span>
+          <h2 id="step-title"></h2>
+          <p class="event" id="step-event"></p>
+        </div>
+        <section class="changed-strip">
+          <h3>Changed this step</h3>
+          <ul id="changed-list"></ul>
+        </section>
+        <div class="surface-grid" id="surface-grid">
+          <article class="surface-card" id="coordinate-card">
+            <div class="card-head">
+              <h3>Coordinate</h3>
+              <span class="pill" id="coordinate-status"></span>
+            </div>
+            <p id="coordinate-body"></p>
+            <div class="meta" id="coordinate-meta"></div>
+          </article>
+          <article class="surface-card" id="implement-card">
+            <div class="card-head">
+              <h3>Implement</h3>
+              <span class="pill" id="implement-status"></span>
+            </div>
+            <p id="implement-body"></p>
+            <div class="meta" id="implement-meta"></div>
+          </article>
+          <article class="surface-card" id="value-card">
+            <div class="card-head">
+              <h3>Value</h3>
+              <span class="pill" id="value-status"></span>
+            </div>
+            <p id="value-body"></p>
+            <div class="meta" id="value-meta"></div>
+          </article>
+        </div>
+        <details class="drawer" open>
+          <summary>Proof drawer · Sources · Claims · Kernel output</summary>
+          <section class="proof-grid">
+            <div>
+              <h3>Sources</h3>
+              <ul id="sources-list"></ul>
+            </div>
+            <div>
+              <h3>Supported</h3>
+              <ul id="supported-list"></ul>
+            </div>
+            <div>
+              <h3>Rejected</h3>
+              <ul id="rejected-list"></ul>
+            </div>
+            <div>
+              <h3>Next Work</h3>
+              <ul id="next-work-list"></ul>
+            </div>
+            <details class="raw-objects">
+              <summary>View raw objects</summary>
+              <div class="raw-columns">
+                <div>
+                  <h3>Sources</h3>
+                  <ul id="raw-sources-list"></ul>
+                </div>
+                <div>
+                  <h3>Claims</h3>
+                  <ul id="raw-claims-list"></ul>
+                </div>
+                <div>
+                  <h3>Kernel Output</h3>
+                  <ul id="raw-kernel-list"></ul>
+                </div>
+              </div>
+            </details>
+            <div class="takeaway" id="takeaway"></div>
+            <p class="core-line">Corus does not jump from unresolved to solved. It shows how context becomes clearer one event at a time.</p>
+          </section>
+        </details>
+      </section>
+    </section>
+  </main>
+  <script id="replay-data" type="application/json">{"core_line": "Corus does not jump from unresolved to solved. It shows how context becomes clearer one event at a time.", "framing": "Watch the same context update across three role surfaces.", "object_labels": {"artifact.customer_system_mapping": "Customer system mapping", "artifact.integration_path": "Implementation path", "artifact.roi_assumption": "ROI assumption", "artifact.value_evidence": "Value evidence", "claim.cost_impact": "Specific cost impact claim", "claim.value_narrative": "Value narrative", "contract.customer_system_mapping": "Customer system mapping", "contract.integration_path": "Implementation path", "contract.roi_assumption": "ROI assumption", "contract.value_evidence": "Value evidence", "source.neara_rvo": "Neara RVO public reference"}, "steps": [{"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing", "artifact.integration_path": "expected_missing", "artifact.roi_assumption": "expected_missing", "artifact.technical_evidence": "validated", "artifact.value_evidence": "expected_missing"}, "changed": ["Context created", "Required artifacts are expected but missing"], "claims": [{"artifact": "artifact.value_evidence", "evidence_refs": [], "id": "claim.value_narrative", "status": "candidate", "text": "RVO-style intelligence may support customer conversations around planning, prioritization, and operational risk."}, {"artifact": "artifact.roi_assumption", "evidence_refs": [], "id": "claim.cost_impact", "status": "candidate", "text": "Specific dollar-impact claim is not supported by admitted evidence."}], "event": "Director opens RVO account context.", "id": "step_0", "index": 0, "kernel": {"derived": {"blocked_contracts": ["contract.integration_path"], "contracts": [{"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing"}, "blocked_by": [], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.customer_system_mapping", "output": "missing", "produces": ["artifact.customer_system_mapping"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.customer_system_mapping", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.customer_system_mapping"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.integration_path": "expected_missing"}, "blocked_by": ["artifact.customer_system_mapping"], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.integration_path", "output": "missing", "produces": ["artifact.integration_path"], "readiness": "blocked", "rejected_artifacts": [], "trace": {"contract": "contract.integration_path", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.integration_path"], "readiness": "missing or unvalidated requirements"}}, {"artifact_statuses": {"artifact.roi_assumption": "expected_missing"}, "blocked_by": [], "consumer": "agent.director_owner", "executor": "agent.cva_consumer", "id": "contract.roi_assumption", "output": "missing", "produces": ["artifact.roi_assumption"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.roi_assumption", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.roi_assumption"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.technical_evidence": "validated"}, "blocked_by": [], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.technical_evidence", "output": "satisfied", "produces": ["artifact.technical_evidence"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.technical_evidence", "output": "all produced artifacts are validated", "produced_artifacts": ["artifact.technical_evidence"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.value_evidence": "expected_missing"}, "blocked_by": [], "consumer": "agent.director_owner", "executor": "agent.cva_consumer", "id": "contract.value_evidence", "output": "missing", "produces": ["artifact.value_evidence"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.value_evidence", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.value_evidence"], "readiness": "all requirements validated"}}], "missing_contracts": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.value_evidence"], "next_work": {"consumer_actions": [], "executor_actions": [{"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing"}, "consumer": "agent.cva_consumer", "contract": "contract.customer_system_mapping", "executor": "agent.fde_executor", "produces": ["artifact.customer_system_mapping"], "why": "contract is unblocked and needs executor action"}, {"artifact_statuses": {"artifact.roi_assumption": "expected_missing"}, "consumer": "agent.director_owner", "contract": "contract.roi_assumption", "executor": "agent.cva_consumer", "produces": ["artifact.roi_assumption"], "why": "contract is unblocked and needs executor action"}, {"artifact_statuses": {"artifact.value_evidence": "expected_missing"}, "consumer": "agent.director_owner", "contract": "contract.value_evidence", "executor": "agent.cva_consumer", "produces": ["artifact.value_evidence"], "why": "contract is unblocked and needs executor action"}]}, "objectives": [{"agents": ["agent.cva_consumer", "agent.director_owner", "agent.fde_executor"], "contracts": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.technical_evidence", "contract.value_evidence"], "id": "objective.rvo_customer_action", "intent": "Coordinate RVO-style risk intelligence into customer implementation value.", "prevented_by": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.value_evidence"], "satisfied": false, "trace": {"prevented_by": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.value_evidence"], "satisfaction": "listed contracts are not all satisfied"}}], "partial_contracts": [], "rejected_contracts": [], "satisfied_contracts": ["contract.technical_evidence"], "submitted_contracts": [], "unblocked_contracts": ["contract.customer_system_mapping", "contract.roi_assumption", "contract.technical_evidence", "contract.value_evidence"]}}, "label": "Context opened", "primary_surface": "coordinate", "proof": {"next_consumer_actions": [], "next_executor_actions": ["Customer system mapping", "ROI assumption", "Value evidence"], "raw": {"claims": ["claim.value_narrative=candidate", "claim.cost_impact=candidate"], "consumer_actions": [], "executor_actions": ["contract.customer_system_mapping", "contract.roi_assumption", "contract.value_evidence"], "sources": []}, "rejected": [], "sources": [], "supported": []}, "sources": [], "state": "Expected artifacts exist, but most are missing.", "state_kind": "kernel", "surfaces": {"coordinate": {"body": "Context opened. Required artifacts are missing.", "next_consumer_actions": [], "next_executor_actions": ["Customer system mapping", "ROI assumption", "Value evidence"], "status": "Unresolved", "title": "Coordinate"}, "implement": {"body": "No implementation path has been submitted.", "status": "Missing", "title": "Implement", "validation_blockers": ["Customer system mapping"]}, "value": {"body": "General value context exists, but no validated value evidence yet.", "claim_statuses": {"Specific cost impact claim": "candidate", "Value narrative": "candidate"}, "status": "Source-bounded", "title": "Value"}}, "takeaway": "The team has a context, but it is not actionable yet."}, {"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing", "artifact.integration_path": "expected_missing", "artifact.roi_assumption": "expected_missing", "artifact.technical_evidence": "validated", "artifact.value_evidence": "expected_missing"}, "changed": ["Neara RVO public reference attached", "Artifact readiness does not change"], "claims": [{"artifact": "artifact.value_evidence", "evidence_refs": [], "id": "claim.value_narrative", "status": "candidate", "text": "RVO-style intelligence may support customer conversations around planning, prioritization, and operational risk."}, {"artifact": "artifact.roi_assumption", "evidence_refs": [], "id": "claim.cost_impact", "status": "candidate", "text": "Specific dollar-impact claim is not supported by admitted evidence."}], "event": "RVO/public source reference is added.", "id": "step_1", "index": 1, "kernel": {"derived": {"blocked_contracts": ["contract.integration_path"], "contracts": [{"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing"}, "blocked_by": [], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.customer_system_mapping", "output": "missing", "produces": ["artifact.customer_system_mapping"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.customer_system_mapping", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.customer_system_mapping"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.integration_path": "expected_missing"}, "blocked_by": ["artifact.customer_system_mapping"], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.integration_path", "output": "missing", "produces": ["artifact.integration_path"], "readiness": "blocked", "rejected_artifacts": [], "trace": {"contract": "contract.integration_path", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.integration_path"], "readiness": "missing or unvalidated requirements"}}, {"artifact_statuses": {"artifact.roi_assumption": "expected_missing"}, "blocked_by": [], "consumer": "agent.director_owner", "executor": "agent.cva_consumer", "id": "contract.roi_assumption", "output": "missing", "produces": ["artifact.roi_assumption"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.roi_assumption", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.roi_assumption"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.technical_evidence": "validated"}, "blocked_by": [], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.technical_evidence", "output": "satisfied", "produces": ["artifact.technical_evidence"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.technical_evidence", "output": "all produced artifacts are validated", "produced_artifacts": ["artifact.technical_evidence"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.value_evidence": "expected_missing"}, "blocked_by": [], "consumer": "agent.director_owner", "executor": "agent.cva_consumer", "id": "contract.value_evidence", "output": "missing", "produces": ["artifact.value_evidence"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.value_evidence", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.value_evidence"], "readiness": "all requirements validated"}}], "missing_contracts": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.value_evidence"], "next_work": {"consumer_actions": [], "executor_actions": [{"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing"}, "consumer": "agent.cva_consumer", "contract": "contract.customer_system_mapping", "executor": "agent.fde_executor", "produces": ["artifact.customer_system_mapping"], "why": "contract is unblocked and needs executor action"}, {"artifact_statuses": {"artifact.roi_assumption": "expected_missing"}, "consumer": "agent.director_owner", "contract": "contract.roi_assumption", "executor": "agent.cva_consumer", "produces": ["artifact.roi_assumption"], "why": "contract is unblocked and needs executor action"}, {"artifact_statuses": {"artifact.value_evidence": "expected_missing"}, "consumer": "agent.director_owner", "contract": "contract.value_evidence", "executor": "agent.cva_consumer", "produces": ["artifact.value_evidence"], "why": "contract is unblocked and needs executor action"}]}, "objectives": [{"agents": ["agent.cva_consumer", "agent.director_owner", "agent.fde_executor"], "contracts": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.technical_evidence", "contract.value_evidence"], "id": "objective.rvo_customer_action", "intent": "Coordinate RVO-style risk intelligence into customer implementation value.", "prevented_by": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.value_evidence"], "satisfied": false, "trace": {"prevented_by": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.value_evidence"], "satisfaction": "listed contracts are not all satisfied"}}], "partial_contracts": [], "rejected_contracts": [], "satisfied_contracts": ["contract.technical_evidence"], "submitted_contracts": [], "unblocked_contracts": ["contract.customer_system_mapping", "contract.roi_assumption", "contract.technical_evidence", "contract.value_evidence"]}}, "label": "Source attached", "primary_surface": "coordinate", "proof": {"next_consumer_actions": [], "next_executor_actions": ["Customer system mapping", "ROI assumption", "Value evidence"], "raw": {"claims": ["claim.value_narrative=candidate", "claim.cost_impact=candidate"], "consumer_actions": [], "executor_actions": ["contract.customer_system_mapping", "contract.roi_assumption", "contract.value_evidence"], "sources": ["source.neara_rvo"]}, "rejected": [], "sources": ["Neara RVO public reference"], "supported": []}, "sources": [{"id": "source.neara_rvo", "label": "Neara RVO public source", "locator": "demo://sources/neara-rvo"}], "state": "source.neara_rvo = attached", "state_kind": "demo", "surfaces": {"coordinate": {"body": "Source context is now attached, but artifacts are still missing.", "next_consumer_actions": [], "next_executor_actions": ["Customer system mapping", "ROI assumption", "Value evidence"], "status": "Unresolved", "title": "Coordinate"}, "implement": {"body": "RVO-style context may inform implementation planning, but no technical path exists yet.", "status": "Missing", "title": "Implement", "validation_blockers": ["Customer system mapping"]}, "value": {"body": "A general value narrative can be discussed, but it remains source-bounded.", "claim_statuses": {"Specific cost impact claim": "candidate", "Value narrative": "candidate"}, "status": "Source-bounded", "title": "Value"}}, "takeaway": "A source exists, but source presence is not the same as readiness."}, {"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing", "artifact.integration_path": "expected_missing", "artifact.roi_assumption": "expected_missing", "artifact.technical_evidence": "validated", "artifact.value_evidence": "present"}, "changed": ["Value narrative marked supported", "Value evidence is present", "Implementation work remains unresolved"], "claims": [{"artifact": "artifact.roi_assumption", "evidence_refs": [], "id": "claim.cost_impact", "status": "candidate", "text": "Specific dollar-impact claim is not supported by admitted evidence."}, {"artifact": "artifact.value_evidence", "evidence_refs": ["source.neara_rvo"], "id": "claim.value_narrative", "source_refs": ["source.neara_rvo"], "status": "supported", "text": "RVO-style intelligence can support customer conversations around planning, prioritization, and operational risk."}], "event": "CVA-facing value claim is marked supported.", "id": "step_2", "index": 2, "kernel": {"derived": {"blocked_contracts": ["contract.integration_path"], "contracts": [{"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing"}, "blocked_by": [], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.customer_system_mapping", "output": "missing", "produces": ["artifact.customer_system_mapping"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.customer_system_mapping", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.customer_system_mapping"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.integration_path": "expected_missing"}, "blocked_by": ["artifact.customer_system_mapping"], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.integration_path", "output": "missing", "produces": ["artifact.integration_path"], "readiness": "blocked", "rejected_artifacts": [], "trace": {"contract": "contract.integration_path", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.integration_path"], "readiness": "missing or unvalidated requirements"}}, {"artifact_statuses": {"artifact.roi_assumption": "expected_missing"}, "blocked_by": [], "consumer": "agent.director_owner", "executor": "agent.cva_consumer", "id": "contract.roi_assumption", "output": "missing", "produces": ["artifact.roi_assumption"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.roi_assumption", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.roi_assumption"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.technical_evidence": "validated"}, "blocked_by": [], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.technical_evidence", "output": "satisfied", "produces": ["artifact.technical_evidence"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.technical_evidence", "output": "all produced artifacts are validated", "produced_artifacts": ["artifact.technical_evidence"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.value_evidence": "present"}, "blocked_by": [], "consumer": "agent.director_owner", "executor": "agent.cva_consumer", "id": "contract.value_evidence", "output": "submitted", "produces": ["artifact.value_evidence"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.value_evidence", "output": "all produced artifacts are present", "produced_artifacts": ["artifact.value_evidence"], "readiness": "all requirements validated"}}], "missing_contracts": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption"], "next_work": {"consumer_actions": [{"artifact_statuses": {"artifact.value_evidence": "present"}, "consumer": "agent.director_owner", "contract": "contract.value_evidence", "executor": "agent.cva_consumer", "produces": ["artifact.value_evidence"], "why": "contract is submitted and needs consumer validation"}], "executor_actions": [{"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing"}, "consumer": "agent.cva_consumer", "contract": "contract.customer_system_mapping", "executor": "agent.fde_executor", "produces": ["artifact.customer_system_mapping"], "why": "contract is unblocked and needs executor action"}, {"artifact_statuses": {"artifact.roi_assumption": "expected_missing"}, "consumer": "agent.director_owner", "contract": "contract.roi_assumption", "executor": "agent.cva_consumer", "produces": ["artifact.roi_assumption"], "why": "contract is unblocked and needs executor action"}]}, "objectives": [{"agents": ["agent.cva_consumer", "agent.director_owner", "agent.fde_executor"], "contracts": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.technical_evidence", "contract.value_evidence"], "id": "objective.rvo_customer_action", "intent": "Coordinate RVO-style risk intelligence into customer implementation value.", "prevented_by": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.value_evidence"], "satisfied": false, "trace": {"prevented_by": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.value_evidence"], "satisfaction": "listed contracts are not all satisfied"}}], "partial_contracts": [], "rejected_contracts": [], "satisfied_contracts": ["contract.technical_evidence"], "submitted_contracts": ["contract.value_evidence"], "unblocked_contracts": ["contract.customer_system_mapping", "contract.roi_assumption", "contract.technical_evidence", "contract.value_evidence"]}}, "label": "Value evidence present", "primary_surface": "value", "proof": {"next_consumer_actions": ["Value evidence"], "next_executor_actions": ["Customer system mapping", "ROI assumption"], "raw": {"claims": ["claim.cost_impact=candidate", "claim.value_narrative=supported"], "consumer_actions": ["contract.value_evidence"], "executor_actions": ["contract.customer_system_mapping", "contract.roi_assumption"], "sources": ["source.neara_rvo"]}, "rejected": [], "sources": ["Neara RVO public reference"], "supported": ["Value narrative"]}, "sources": [{"id": "source.neara_rvo", "label": "Neara RVO public source", "locator": "demo://sources/neara-rvo"}], "state": "claim.value_narrative = supported; artifact.value_evidence = present", "state_kind": "demo", "surfaces": {"coordinate": {"body": "Value evidence is now present. Implementation work remains missing.", "next_consumer_actions": ["Value evidence"], "next_executor_actions": ["Customer system mapping", "ROI assumption"], "status": "Unresolved", "title": "Coordinate"}, "implement": {"body": "No change. Technical implementation is still unresolved.", "status": "Missing", "title": "Implement", "validation_blockers": ["Customer system mapping"]}, "value": {"body": "Value narrative is supported: RVO-style intelligence can support customer conversations around planning, prioritization, and operational risk.", "claim_statuses": {"Specific cost impact claim": "candidate", "Value narrative": "supported"}, "status": "Supported", "title": "Value"}}, "takeaway": "The value surface updates, but the implementation surface does not magically become ready."}, {"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing", "artifact.integration_path": "expected_missing", "artifact.roi_assumption": "expected_missing", "artifact.technical_evidence": "validated", "artifact.value_evidence": "present"}, "changed": ["Specific dollar-impact claim rejected", "ROI assumption remains missing"], "claims": [{"artifact": "artifact.roi_assumption", "evidence_refs": [], "id": "claim.cost_impact", "status": "rejected", "text": "Do not claim specific dollar impact until customer-approved ROI assumptions are admitted."}, {"artifact": "artifact.value_evidence", "evidence_refs": ["source.neara_rvo"], "id": "claim.value_narrative", "source_refs": ["source.neara_rvo"], "status": "supported", "text": "RVO-style intelligence can support customer conversations around planning, prioritization, and operational risk."}], "event": "Specific dollar-impact claim is rejected.", "id": "step_3", "index": 3, "kernel": {"derived": {"blocked_contracts": ["contract.integration_path"], "contracts": [{"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing"}, "blocked_by": [], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.customer_system_mapping", "output": "missing", "produces": ["artifact.customer_system_mapping"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.customer_system_mapping", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.customer_system_mapping"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.integration_path": "expected_missing"}, "blocked_by": ["artifact.customer_system_mapping"], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.integration_path", "output": "missing", "produces": ["artifact.integration_path"], "readiness": "blocked", "rejected_artifacts": [], "trace": {"contract": "contract.integration_path", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.integration_path"], "readiness": "missing or unvalidated requirements"}}, {"artifact_statuses": {"artifact.roi_assumption": "expected_missing"}, "blocked_by": [], "consumer": "agent.director_owner", "executor": "agent.cva_consumer", "id": "contract.roi_assumption", "output": "missing", "produces": ["artifact.roi_assumption"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.roi_assumption", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.roi_assumption"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.technical_evidence": "validated"}, "blocked_by": [], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.technical_evidence", "output": "satisfied", "produces": ["artifact.technical_evidence"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.technical_evidence", "output": "all produced artifacts are validated", "produced_artifacts": ["artifact.technical_evidence"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.value_evidence": "present"}, "blocked_by": [], "consumer": "agent.director_owner", "executor": "agent.cva_consumer", "id": "contract.value_evidence", "output": "submitted", "produces": ["artifact.value_evidence"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.value_evidence", "output": "all produced artifacts are present", "produced_artifacts": ["artifact.value_evidence"], "readiness": "all requirements validated"}}], "missing_contracts": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption"], "next_work": {"consumer_actions": [{"artifact_statuses": {"artifact.value_evidence": "present"}, "consumer": "agent.director_owner", "contract": "contract.value_evidence", "executor": "agent.cva_consumer", "produces": ["artifact.value_evidence"], "why": "contract is submitted and needs consumer validation"}], "executor_actions": [{"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing"}, "consumer": "agent.cva_consumer", "contract": "contract.customer_system_mapping", "executor": "agent.fde_executor", "produces": ["artifact.customer_system_mapping"], "why": "contract is unblocked and needs executor action"}, {"artifact_statuses": {"artifact.roi_assumption": "expected_missing"}, "consumer": "agent.director_owner", "contract": "contract.roi_assumption", "executor": "agent.cva_consumer", "produces": ["artifact.roi_assumption"], "why": "contract is unblocked and needs executor action"}]}, "objectives": [{"agents": ["agent.cva_consumer", "agent.director_owner", "agent.fde_executor"], "contracts": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.technical_evidence", "contract.value_evidence"], "id": "objective.rvo_customer_action", "intent": "Coordinate RVO-style risk intelligence into customer implementation value.", "prevented_by": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.value_evidence"], "satisfied": false, "trace": {"prevented_by": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.value_evidence"], "satisfaction": "listed contracts are not all satisfied"}}], "partial_contracts": [], "rejected_contracts": [], "satisfied_contracts": ["contract.technical_evidence"], "submitted_contracts": ["contract.value_evidence"], "unblocked_contracts": ["contract.customer_system_mapping", "contract.roi_assumption", "contract.technical_evidence", "contract.value_evidence"]}}, "label": "Cost claim rejected", "primary_surface": "value", "proof": {"next_consumer_actions": ["Value evidence"], "next_executor_actions": ["Customer system mapping", "ROI assumption"], "raw": {"claims": ["claim.cost_impact=rejected", "claim.value_narrative=supported"], "consumer_actions": ["contract.value_evidence"], "executor_actions": ["contract.customer_system_mapping", "contract.roi_assumption"], "sources": ["source.neara_rvo"]}, "rejected": ["Specific cost impact claim"], "sources": ["Neara RVO public reference"], "supported": ["Value narrative"]}, "sources": [{"id": "source.neara_rvo", "label": "Neara RVO public source", "locator": "demo://sources/neara-rvo"}], "state": "claim.cost_impact = rejected; artifact.roi_assumption = expected_missing", "state_kind": "demo", "surfaces": {"coordinate": {"body": "ROI assumption is now a visible missing artifact.", "next_consumer_actions": ["Value evidence"], "next_executor_actions": ["Customer system mapping", "ROI assumption"], "status": "Unresolved", "title": "Coordinate"}, "implement": {"body": "No implementation change.", "status": "Missing", "title": "Implement", "validation_blockers": ["Customer system mapping"]}, "value": {"body": "Do not claim specific dollar impact. Customer-approved ROI assumptions are missing.", "claim_statuses": {"Specific cost impact claim": "rejected", "Value narrative": "supported"}, "status": "Guarded", "title": "Value"}}, "takeaway": "Corus protects the customer-facing story from overclaiming."}, {"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing", "artifact.integration_path": "present", "artifact.roi_assumption": "expected_missing", "artifact.technical_evidence": "validated", "artifact.value_evidence": "present"}, "changed": ["Implementation path submitted", "Customer system mapping remains missing"], "claims": [{"artifact": "artifact.roi_assumption", "evidence_refs": [], "id": "claim.cost_impact", "status": "rejected", "text": "Do not claim specific dollar impact until customer-approved ROI assumptions are admitted."}, {"artifact": "artifact.value_evidence", "evidence_refs": ["source.neara_rvo"], "id": "claim.value_narrative", "source_refs": ["source.neara_rvo"], "status": "supported", "text": "RVO-style intelligence can support customer conversations around planning, prioritization, and operational risk."}], "event": "FDE submits preliminary implementation path.", "id": "step_4", "index": 4, "kernel": {"derived": {"blocked_contracts": ["contract.integration_path"], "contracts": [{"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing"}, "blocked_by": [], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.customer_system_mapping", "output": "missing", "produces": ["artifact.customer_system_mapping"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.customer_system_mapping", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.customer_system_mapping"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.integration_path": "present"}, "blocked_by": ["artifact.customer_system_mapping"], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.integration_path", "output": "submitted", "produces": ["artifact.integration_path"], "readiness": "blocked", "rejected_artifacts": [], "trace": {"contract": "contract.integration_path", "output": "all produced artifacts are present", "produced_artifacts": ["artifact.integration_path"], "readiness": "missing or unvalidated requirements"}}, {"artifact_statuses": {"artifact.roi_assumption": "expected_missing"}, "blocked_by": [], "consumer": "agent.director_owner", "executor": "agent.cva_consumer", "id": "contract.roi_assumption", "output": "missing", "produces": ["artifact.roi_assumption"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.roi_assumption", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.roi_assumption"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.technical_evidence": "validated"}, "blocked_by": [], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.technical_evidence", "output": "satisfied", "produces": ["artifact.technical_evidence"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.technical_evidence", "output": "all produced artifacts are validated", "produced_artifacts": ["artifact.technical_evidence"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.value_evidence": "present"}, "blocked_by": [], "consumer": "agent.director_owner", "executor": "agent.cva_consumer", "id": "contract.value_evidence", "output": "submitted", "produces": ["artifact.value_evidence"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.value_evidence", "output": "all produced artifacts are present", "produced_artifacts": ["artifact.value_evidence"], "readiness": "all requirements validated"}}], "missing_contracts": ["contract.customer_system_mapping", "contract.roi_assumption"], "next_work": {"consumer_actions": [{"artifact_statuses": {"artifact.value_evidence": "present"}, "consumer": "agent.director_owner", "contract": "contract.value_evidence", "executor": "agent.cva_consumer", "produces": ["artifact.value_evidence"], "why": "contract is submitted and needs consumer validation"}], "executor_actions": [{"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing"}, "consumer": "agent.cva_consumer", "contract": "contract.customer_system_mapping", "executor": "agent.fde_executor", "produces": ["artifact.customer_system_mapping"], "why": "contract is unblocked and needs executor action"}, {"artifact_statuses": {"artifact.roi_assumption": "expected_missing"}, "consumer": "agent.director_owner", "contract": "contract.roi_assumption", "executor": "agent.cva_consumer", "produces": ["artifact.roi_assumption"], "why": "contract is unblocked and needs executor action"}]}, "objectives": [{"agents": ["agent.cva_consumer", "agent.director_owner", "agent.fde_executor"], "contracts": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.technical_evidence", "contract.value_evidence"], "id": "objective.rvo_customer_action", "intent": "Coordinate RVO-style risk intelligence into customer implementation value.", "prevented_by": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.value_evidence"], "satisfied": false, "trace": {"prevented_by": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.value_evidence"], "satisfaction": "listed contracts are not all satisfied"}}], "partial_contracts": [], "rejected_contracts": [], "satisfied_contracts": ["contract.technical_evidence"], "submitted_contracts": ["contract.integration_path", "contract.value_evidence"], "unblocked_contracts": ["contract.customer_system_mapping", "contract.roi_assumption", "contract.technical_evidence", "contract.value_evidence"]}}, "label": "Implementation path present", "primary_surface": "implement", "proof": {"next_consumer_actions": ["Value evidence"], "next_executor_actions": ["Customer system mapping", "ROI assumption"], "raw": {"claims": ["claim.cost_impact=rejected", "claim.value_narrative=supported"], "consumer_actions": ["contract.value_evidence"], "executor_actions": ["contract.customer_system_mapping", "contract.roi_assumption"], "sources": ["source.neara_rvo"]}, "rejected": ["Specific cost impact claim"], "sources": ["Neara RVO public reference"], "supported": ["Value narrative"]}, "sources": [{"id": "source.neara_rvo", "label": "Neara RVO public source", "locator": "demo://sources/neara-rvo"}], "state": "artifact.integration_path = present", "state_kind": "kernel", "surfaces": {"coordinate": {"body": "Implementation path is present. Remaining next actions: customer system mapping, ROI assumption.", "next_consumer_actions": ["Value evidence"], "next_executor_actions": ["Customer system mapping", "ROI assumption"], "status": "Actionable", "title": "Coordinate"}, "implement": {"body": "Implementation path is present, but customer system mapping is missing.", "status": "Partially supported", "title": "Implement", "validation_blockers": ["Customer system mapping"]}, "value": {"body": "Value narrative remains supported. Cost impact remains rejected.", "claim_statuses": {"Specific cost impact claim": "rejected", "Value narrative": "supported"}, "status": "Source-bounded", "title": "Value"}}, "takeaway": "The context is still not done, but the next work is now specific."}, {"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing", "artifact.integration_path": "present", "artifact.roi_assumption": "expected_missing", "artifact.technical_evidence": "validated", "artifact.value_evidence": "present"}, "changed": ["Customer system mapping is still missing", "ROI assumption is still missing", "Next executor actions are now explicit", "No new artifact was added in this step"], "claims": [{"artifact": "artifact.roi_assumption", "evidence_refs": [], "id": "claim.cost_impact", "status": "rejected", "text": "Do not claim specific dollar impact until customer-approved ROI assumptions are admitted."}, {"artifact": "artifact.value_evidence", "evidence_refs": ["source.neara_rvo"], "id": "claim.value_narrative", "source_refs": ["source.neara_rvo"], "status": "supported", "text": "RVO-style intelligence can support customer conversations around planning, prioritization, and operational risk."}], "event": "Reducer derives next work.", "id": "step_5", "index": 5, "kernel": {"derived": {"blocked_contracts": ["contract.integration_path"], "contracts": [{"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing"}, "blocked_by": [], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.customer_system_mapping", "output": "missing", "produces": ["artifact.customer_system_mapping"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.customer_system_mapping", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.customer_system_mapping"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.integration_path": "present"}, "blocked_by": ["artifact.customer_system_mapping"], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.integration_path", "output": "submitted", "produces": ["artifact.integration_path"], "readiness": "blocked", "rejected_artifacts": [], "trace": {"contract": "contract.integration_path", "output": "all produced artifacts are present", "produced_artifacts": ["artifact.integration_path"], "readiness": "missing or unvalidated requirements"}}, {"artifact_statuses": {"artifact.roi_assumption": "expected_missing"}, "blocked_by": [], "consumer": "agent.director_owner", "executor": "agent.cva_consumer", "id": "contract.roi_assumption", "output": "missing", "produces": ["artifact.roi_assumption"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.roi_assumption", "output": "all produced artifacts are expected_missing", "produced_artifacts": ["artifact.roi_assumption"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.technical_evidence": "validated"}, "blocked_by": [], "consumer": "agent.cva_consumer", "executor": "agent.fde_executor", "id": "contract.technical_evidence", "output": "satisfied", "produces": ["artifact.technical_evidence"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.technical_evidence", "output": "all produced artifacts are validated", "produced_artifacts": ["artifact.technical_evidence"], "readiness": "all requirements validated"}}, {"artifact_statuses": {"artifact.value_evidence": "present"}, "blocked_by": [], "consumer": "agent.director_owner", "executor": "agent.cva_consumer", "id": "contract.value_evidence", "output": "submitted", "produces": ["artifact.value_evidence"], "readiness": "unblocked", "rejected_artifacts": [], "trace": {"contract": "contract.value_evidence", "output": "all produced artifacts are present", "produced_artifacts": ["artifact.value_evidence"], "readiness": "all requirements validated"}}], "missing_contracts": ["contract.customer_system_mapping", "contract.roi_assumption"], "next_work": {"consumer_actions": [{"artifact_statuses": {"artifact.value_evidence": "present"}, "consumer": "agent.director_owner", "contract": "contract.value_evidence", "executor": "agent.cva_consumer", "produces": ["artifact.value_evidence"], "why": "contract is submitted and needs consumer validation"}], "executor_actions": [{"artifact_statuses": {"artifact.customer_system_mapping": "expected_missing"}, "consumer": "agent.cva_consumer", "contract": "contract.customer_system_mapping", "executor": "agent.fde_executor", "produces": ["artifact.customer_system_mapping"], "why": "contract is unblocked and needs executor action"}, {"artifact_statuses": {"artifact.roi_assumption": "expected_missing"}, "consumer": "agent.director_owner", "contract": "contract.roi_assumption", "executor": "agent.cva_consumer", "produces": ["artifact.roi_assumption"], "why": "contract is unblocked and needs executor action"}]}, "objectives": [{"agents": ["agent.cva_consumer", "agent.director_owner", "agent.fde_executor"], "contracts": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.technical_evidence", "contract.value_evidence"], "id": "objective.rvo_customer_action", "intent": "Coordinate RVO-style risk intelligence into customer implementation value.", "prevented_by": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.value_evidence"], "satisfied": false, "trace": {"prevented_by": ["contract.customer_system_mapping", "contract.integration_path", "contract.roi_assumption", "contract.value_evidence"], "satisfaction": "listed contracts are not all satisfied"}}], "partial_contracts": [], "rejected_contracts": [], "satisfied_contracts": ["contract.technical_evidence"], "submitted_contracts": ["contract.integration_path", "contract.value_evidence"], "unblocked_contracts": ["contract.customer_system_mapping", "contract.roi_assumption", "contract.technical_evidence", "contract.value_evidence"]}}, "label": "Remaining work exposed", "primary_surface": "coordinate", "proof": {"next_consumer_actions": ["Value evidence"], "next_executor_actions": ["Customer system mapping", "ROI assumption"], "raw": {"claims": ["claim.cost_impact=rejected", "claim.value_narrative=supported"], "consumer_actions": ["contract.value_evidence"], "executor_actions": ["contract.customer_system_mapping", "contract.roi_assumption"], "sources": ["source.neara_rvo"]}, "rejected": ["Specific cost impact claim"], "sources": ["Neara RVO public reference"], "supported": ["Value narrative"]}, "sources": [{"id": "source.neara_rvo", "label": "Neara RVO public source", "locator": "demo://sources/neara-rvo"}], "state": "next_work.executor_actions: contract.customer_system_mapping, contract.roi_assumption", "state_kind": "kernel", "surfaces": {"coordinate": {"body": "Corus did not mark the context as solved. It derived the next accountable actions from current artifact and claim states.", "next": ["Customer system mapping", "ROI assumption"], "next_consumer_actions": ["Value evidence"], "next_executor_actions": ["Customer system mapping", "ROI assumption"], "status": "Actionable", "title": "Coordinate", "validation": ["Value evidence"], "why": "Implementation path is present, value narrative is supported, cost impact is rejected, and required proof is still missing."}, "implement": {"body": "Implementation path submitted. Validation blocked by customer system mapping.", "missing": ["Customer system mapping", "Workflow owner", "Acceptance criteria"], "next": ["Confirm customer systems before creating implementation tickets"], "present": ["Implementation path"], "status": "Partially supported", "title": "Implement", "validation_blockers": ["Customer system mapping"]}, "value": {"body": "Use the supported value narrative, but avoid financial claims until ROI assumptions are admitted.", "claim_statuses": {"Specific cost impact claim": "rejected", "Value narrative": "supported"}, "next": ["Avoid financial claims until ROI assumptions are admitted"], "rejected": ["Specific dollar impact"], "status": "Source-bounded", "supported": ["General value narrative"], "title": "Value"}}, "takeaway": "Corus turns unresolved context into accountable next action."}], "title": "RVO Account Context Replay"}</script>
+  <script>
+    const replay = JSON.parse(document.getElementById('replay-data').textContent);
+    const timeline = document.getElementById('timeline');
+    const els = {
+      kicker: document.getElementById('step-kicker'),
+      title: document.getElementById('step-title'),
+      event: document.getElementById('step-event'),
+      changed: document.getElementById('changed-list'),
+      surfaceGrid: document.getElementById('surface-grid'),
+      coordinateCard: document.getElementById('coordinate-card'),
+      coordinateBody: document.getElementById('coordinate-body'),
+      coordinateStatus: document.getElementById('coordinate-status'),
+      coordinateMeta: document.getElementById('coordinate-meta'),
+      implementCard: document.getElementById('implement-card'),
+      implementBody: document.getElementById('implement-body'),
+      implementStatus: document.getElementById('implement-status'),
+      implementMeta: document.getElementById('implement-meta'),
+      valueCard: document.getElementById('value-card'),
+      valueBody: document.getElementById('value-body'),
+      valueStatus: document.getElementById('value-status'),
+      valueMeta: document.getElementById('value-meta'),
+      sources: document.getElementById('sources-list'),
+      supported: document.getElementById('supported-list'),
+      rejected: document.getElementById('rejected-list'),
+      nextWork: document.getElementById('next-work-list'),
+      rawSources: document.getElementById('raw-sources-list'),
+      rawClaims: document.getElementById('raw-claims-list'),
+      rawKernel: document.getElementById('raw-kernel-list'),
+      takeaway: document.getElementById('takeaway')
+    };
+    const buttons = replay.steps.map((step, index) => {
+      const button = document.createElement('button');
+      button.className = 'step-button';
+      button.type = 'button';
+      button.innerHTML = `<span class="marker">${index}</span><span><span class="step-label">Step ${index} ${step.label}</span><span class="step-event">${step.event}</span></span>`;
+      button.addEventListener('click', () => renderStep(index));
+      timeline.appendChild(button);
+      return button;
+    });
+    function listItems(element, items, emptyText) {
+      element.innerHTML = '';
+      if (!items.length) {
+        const li = document.createElement('li');
+        li.textContent = emptyText;
+        element.appendChild(li);
+        return;
+      }
+      items.forEach((item) => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        element.appendChild(li);
+      });
+    }
+    function renderStep(index) {
+      const step = replay.steps[index];
+      buttons.forEach((button, i) => button.classList.toggle('active', i === index));
+      els.kicker.textContent = `Step ${step.index}`;
+      els.title.textContent = step.label;
+      els.event.textContent = step.event;
+      listItems(els.changed, step.changed, 'No visible change');
+      els.surfaceGrid.classList.toggle('primary-coordinate', step.primary_surface === 'coordinate');
+      els.coordinateCard.classList.toggle('primary', step.primary_surface === 'coordinate');
+      els.implementCard.classList.toggle('primary', step.primary_surface === 'implement');
+      els.valueCard.classList.toggle('primary', step.primary_surface === 'value');
+      els.coordinateStatus.textContent = step.surfaces.coordinate.status;
+      els.implementStatus.textContent = step.surfaces.implement.status;
+      els.valueStatus.textContent = step.surfaces.value.status;
+      els.coordinateBody.textContent = step.surfaces.coordinate.body;
+      els.implementBody.textContent = step.surfaces.implement.body;
+      els.valueBody.textContent = step.surfaces.value.body;
+      els.coordinateMeta.textContent = `Next executor: ${step.surfaces.coordinate.next_executor_actions.join(', ') || 'none'}`;
+      els.implementMeta.textContent = `Pending before validation: ${step.surfaces.implement.validation_blockers.join(', ') || 'none'}`;
+      const claimMeta = Object.entries(step.surfaces.value.claim_statuses).map(([id, status]) => `${id}=${status}`);
+      els.valueMeta.textContent = claimMeta.join(', ');
+      listItems(els.sources, step.proof.sources.map((source) => `${source} attached`), 'No sources attached');
+      listItems(els.supported, step.proof.supported, 'No supported claims');
+      listItems(els.rejected, step.proof.rejected, 'No rejected claims');
+      listItems(els.nextWork, [
+        ...step.proof.next_executor_actions.map((item) => `Executor: ${item}`),
+        ...step.proof.next_consumer_actions.map((item) => `Consumer: ${item}`)
+      ], 'No next work');
+      listItems(els.rawSources, step.proof.raw.sources, 'No raw sources');
+      listItems(els.rawClaims, step.proof.raw.claims, 'No raw claims');
+      listItems(els.rawKernel, [
+        `state: ${step.state}`,
+        `executor_actions: ${step.proof.raw.executor_actions.join(', ') || 'none'}`,
+        `consumer_actions: ${step.proof.raw.consumer_actions.join(', ') || 'none'}`
+      ], 'No raw kernel output');
+      els.takeaway.textContent = step.takeaway;
+    }
+    renderStep(0);
+  </script>
+</body>
+</html>

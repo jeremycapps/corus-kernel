@@ -28,7 +28,7 @@ where = ["."]
 include = ["corus_kernel*", "corus_agents*", "corus_v1*", "demo*"]
 
 [tool.setuptools.package-data]
-demo = ["fixtures/rvo/*.yaml"]
+demo = ["fixtures/rvo/*.yaml", "*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

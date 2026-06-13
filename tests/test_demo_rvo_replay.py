@@ -1,14 +1,15 @@
-"""Tests for the renderable RVO demo replay."""
+"""Tests for the renderable RVO step replay."""
 
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from demo.rvo_replay import (
-    REPLAY_EVENTS,
-    build_replay,
+    build_step_replay,
     load_rvo_fixture,
     main,
+    render_replay_html,
     render_replay_text,
 )
 
@@ -55,67 +56,158 @@ def test_rvo_fixture_contains_expected_artifacts():
     }
 
 
-def test_rvo_surface_bindings_live_in_fixture_data():
-    bundle = load_rvo_fixture()
-    surfaces = bundle["demo_surfaces"]
-    assert surfaces["implement"]["artifacts"]["integration_path"]["id"] == (
-        "artifact.integration_path"
-    )
-    assert surfaces["implement"]["artifacts"]["customer_mapping"]["id"] == (
-        "artifact.customer_system_mapping"
-    )
-    assert surfaces["value"]["artifacts"]["value_narrative"]["id"] == (
-        "artifact.value_evidence"
-    )
-    assert surfaces["value"]["claims"]["cost_impact"]["id"] == (
-        "claim.unsupported_cost_impact"
-    )
-
-
-def test_rvo_replay_sequence_matches_minimum_slice():
-    assert [event["type"] for event in REPLAY_EVENTS] == [
-        "context_opened",
-        "source_ref_added",
-        "claim_status_set",
-        "artifact_status_set",
+def test_rvo_replay_steps_match_context_sequence():
+    replay = load_rvo_fixture()["demo_replay"]
+    assert [step["label"] for step in replay["steps"]] == [
+        "Context opened",
+        "Source attached",
+        "Value evidence present",
+        "Cost claim rejected",
+        "Implementation path present",
+        "Remaining work exposed",
     ]
-    assert REPLAY_EVENTS[2]["claim"] == "claim.unsupported_cost_impact"
-    assert REPLAY_EVENTS[2]["status"] == "rejected"
-    assert REPLAY_EVENTS[3]["artifact"] == "artifact.integration_path"
-    assert REPLAY_EVENTS[3]["status"] == "present"
+    assert replay["steps"][2]["events"] == [
+        {
+            "type": "claim_status_set",
+            "claim": "claim.value_narrative",
+            "status": "supported",
+            "text": "RVO-style intelligence can support customer conversations around planning, prioritization, and operational risk.",
+            "artifact": "artifact.value_evidence",
+            "source_refs": ["source.neara_rvo"],
+            "evidence_refs": ["source.neara_rvo"],
+        },
+        {
+            "type": "artifact_status_set",
+            "artifact": "artifact.value_evidence",
+            "status": "present",
+        },
+    ]
 
 
-def test_rvo_replay_renders_acceptance_before_after_text():
-    before, after = build_replay()
-    output = render_replay_text(before, after)
-    assert "Before:" in output
-    assert "  Coordinate = unresolved" in output
-    assert "  Implement = blocked/missing" in output
-    assert "  Value = partially supported" in output
-    assert "After:" in output
-    assert "  Coordinate = updated next action:" in output
-    assert "  Implement = implementation path present, customer mapping missing" in output
-    assert "  Value = value narrative supported, cost impact rejected" in output
+def test_rvo_step_payloads_update_same_surfaces_over_time():
+    replay = build_step_replay()
+    steps = replay["steps"]
+    assert len(steps) == 6
+    assert all(set(step["surfaces"]) == {"coordinate", "implement", "value"} for step in steps)
+
+    assert steps[0]["surfaces"]["coordinate"]["body"] == (
+        "Context opened. Required artifacts are missing."
+    )
+    assert steps[0]["surfaces"]["coordinate"]["status"] == "Unresolved"
+    assert steps[1]["sources"] == [
+        {
+            "id": "source.neara_rvo",
+            "label": "Neara RVO public source",
+            "locator": "demo://sources/neara-rvo",
+        }
+    ]
+    assert steps[2]["artifact_statuses"]["artifact.value_evidence"] == "present"
+    assert steps[2]["surfaces"]["value"]["claim_statuses"]["Value narrative"] == (
+        "supported"
+    )
+    assert steps[3]["surfaces"]["value"]["claim_statuses"]["Specific cost impact claim"] == (
+        "rejected"
+    )
+    assert steps[4]["artifact_statuses"]["artifact.integration_path"] == "present"
+    assert steps[5]["primary_surface"] == "coordinate"
+    assert steps[5]["changed"] == [
+        "Customer system mapping is still missing",
+        "ROI assumption is still missing",
+        "Next executor actions are now explicit",
+        "No new artifact was added in this step",
+    ]
+
+
+def test_step_five_kernel_next_work_matches_target():
+    step = build_step_replay()["steps"][5]
+    executor_actions = [
+        action["contract"]
+        for action in step["kernel"]["derived"]["next_work"]["executor_actions"]
+    ]
+    assert executor_actions == [
+        "contract.customer_system_mapping",
+        "contract.roi_assumption",
+    ]
+    assert step["surfaces"]["coordinate"]["body"] == (
+        "Corus did not mark the context as solved. It derived the next accountable actions from current artifact and claim states."
+    )
+    assert step["surfaces"]["coordinate"]["next_executor_actions"] == [
+        "Customer system mapping",
+        "ROI assumption",
+    ]
+    assert step["surfaces"]["implement"]["body"] == (
+        "Implementation path submitted. Validation blocked by customer system mapping."
+    )
+    assert step["surfaces"]["implement"]["validation_blockers"] == [
+        "Customer system mapping"
+    ]
+    assert step["proof"]["supported"] == ["Value narrative"]
+    assert step["proof"]["rejected"] == ["Specific cost impact claim"]
+    assert step["proof"]["next_executor_actions"] == [
+        "Customer system mapping",
+        "ROI assumption",
+    ]
+    assert step["proof"]["raw"]["executor_actions"] == [
+        "contract.customer_system_mapping",
+        "contract.roi_assumption",
+    ]
+
+
+def test_rvo_replay_renders_timeline_text_not_before_after():
+    output = render_replay_text()
+    assert "Replay timeline" in output
+    assert "Step 0 - Context opened" in output
+    assert "Step 5 - Remaining work exposed" in output
+    assert "Changed this step:" in output
+    assert "Before:" not in output
+    assert "After:" not in output
+    assert (
+        "Corus does not jump from unresolved to solved. It shows how context becomes clearer one event at a time."
+        in output
+    )
+
+
+def test_rvo_replay_html_contains_timeline_cards_and_drawer():
+    html = render_replay_html()
+    assert "Replay timeline" in html
+    assert "Coordinate" in html
+    assert "Implement" in html
+    assert "Value" in html
+    assert "Sources" in html
+    assert "Supported" in html
+    assert "Rejected" in html
+    assert "Kernel Output" in html
+    assert "Changed this step" in html
+    assert "Proof drawer" in html
+    assert "View raw objects" in html
 
 
 def test_rvo_replay_kernel_output_is_deterministic():
-    first = build_replay()[1]["kernel"]
-    second = build_replay()[1]["kernel"]
+    first = build_step_replay()["steps"][5]["kernel"]
+    second = build_step_replay()["steps"][5]["kernel"]
     assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
 
 
-def test_rvo_replay_command_prints_human_readable_transcript(capsys):
+def test_rvo_replay_command_prints_human_readable_timeline(capsys):
     assert main([]) == 0
     output = capsys.readouterr().out
-    assert output.startswith("RVO Customer Action Replay\n")
-    assert "Before:" in output
-    assert "After:" in output
+    assert output.startswith("RVO Account Context Replay\n")
+    assert "Replay timeline" in output
+    assert "Step 5 - Remaining work exposed" in output
 
 
 def test_rvo_replay_command_can_emit_json(capsys):
     assert main(["--json"]) == 0
     payload = json.loads(capsys.readouterr().out)
-    assert set(payload) == {"before", "after"}
-    assert payload["after"]["state"]["artifact_statuses"]["artifact.integration_path"] == (
+    assert set(payload) == {"core_line", "framing", "object_labels", "steps", "title"}
+    assert payload["steps"][4]["artifact_statuses"]["artifact.integration_path"] == (
         "present"
     )
+
+
+def test_rvo_replay_command_can_write_html(tmp_path: Path, capsys):
+    path = tmp_path / "rvo.html"
+    assert main(["--html", str(path)]) == 0
+    assert path.exists()
+    assert "Wrote RVO replay page" in capsys.readouterr().out
+    assert "Replay timeline" in path.read_text(encoding="utf-8")
