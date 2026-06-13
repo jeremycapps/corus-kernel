@@ -1,4 +1,4 @@
-"""Shared helpers for surface packet projections."""
+"""Shared helpers for Fasia packet projections."""
 
 from __future__ import annotations
 

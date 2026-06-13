@@ -1,4 +1,4 @@
-"""Tests for deterministic relation-scoped surface packets."""
+"""Tests for deterministic Fasia context translation and packets."""
 
 from __future__ import annotations
 
@@ -9,9 +9,11 @@ from pathlib import Path
 from corus_v1.derive import derive, with_artifact_status
 from corus_v1.load import load_project
 from fasia import (
-    derive_implement_surface,
-    derive_objective_surface,
-    derive_validate_surface,
+    Context,
+    derive_implement_packet,
+    derive_objective_packet,
+    derive_validate_packet,
+    translate_context,
 )
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -39,16 +41,97 @@ def _inputs(bundle: dict) -> tuple[dict, dict, list[dict], list[dict]]:
     return flow, objective, contracts, artifacts
 
 
-def test_objective_surface_projects_objective_scope():
+def test_context_requires_primitive_fields():
+    context = Context(
+        subject="subject.network_plan",
+        consumer="consumer.customer_team",
+        objective="objective.reduce_planning_risk",
+        value="value.operational_clarity",
+        state="state.open",
+    )
+
+    assert context.as_dict() == {
+        "subject": "subject.network_plan",
+        "consumer": "consumer.customer_team",
+        "objective": "objective.reduce_planning_risk",
+        "value": "value.operational_clarity",
+        "state": "state.open",
+    }
+
+
+def test_context_rejects_empty_fields():
+    try:
+        Context(
+            subject="subject.network_plan",
+            consumer="",
+            objective="objective.reduce_planning_risk",
+            value="value.operational_clarity",
+            state="state.open",
+        )
+    except ValueError as error:
+        assert str(error) == "Context.consumer must be a non-empty string"
+    else:
+        raise AssertionError("Context accepted an empty consumer")
+
+
+def test_translation_edges_are_deterministic_context_edges():
+    context = Context(
+        subject="subject.network_plan",
+        consumer="consumer.customer_team",
+        objective="objective.reduce_planning_risk",
+        value="value.operational_clarity",
+        state="state.open",
+    )
+
+    discovery = translate_context(
+        context,
+        "discovery",
+        input_refs=("consumer.customer_team",),
+        output_refs=("objective.reduce_planning_risk",),
+    )
+    strategy = translate_context(context, "strategy")
+    product = translate_context(context, "product")
+
+    assert discovery["translation"] == {
+        "mode": "discovery",
+        "source": "consumer.customer_team",
+        "target": "objective.reduce_planning_risk",
+        "input_refs": ["consumer.customer_team"],
+        "output_refs": ["objective.reduce_planning_risk"],
+    }
+    assert strategy["translation"]["source"] == "objective.reduce_planning_risk"
+    assert strategy["translation"]["target"] == "value.operational_clarity"
+    assert product["translation"]["source"] == "value.operational_clarity"
+    assert product["translation"]["target"] == "consumer.customer_team"
+
+
+def test_unknown_translation_mode_is_rejected():
+    context = Context(
+        subject="subject.network_plan",
+        consumer="consumer.customer_team",
+        objective="objective.reduce_planning_risk",
+        value="value.operational_clarity",
+        state="state.open",
+    )
+
+    try:
+        translate_context(context, "handoff")
+    except ValueError as error:
+        assert str(error) == "Unknown translation mode: handoff"
+    else:
+        raise AssertionError("Unknown translation mode was accepted")
+
+
+def test_objective_packet_projects_objective_scope():
     bundle = _bundle_with_statuses({
         OBJECTIVE_SPEC: "validated",
         AGENT_INSTRUCTIONS: "present",
     })
     flow, objective, contracts, artifacts = _inputs(bundle)
-    packet = derive_objective_surface(flow, objective, contracts, artifacts)
+    packet = derive_objective_packet(flow, objective, contracts, artifacts)
 
-    assert packet["surface"] == {
-        "id": "surface.objective",
+    assert packet["packet"] == {
+        "id": "packet.objective",
         "type": "objective",
         "relation": "objective_scope",
         "subject": "objective.corus_self_build_engine",
@@ -64,21 +147,21 @@ def test_objective_surface_projects_objective_scope():
     ]
 
 
-def test_implement_surface_filters_by_executor():
+def test_implement_packet_filters_by_executor():
     bundle = _bundle_with_statuses({
         OBJECTIVE_SPEC: "validated",
         AGENT_INSTRUCTIONS: "validated",
     })
     flow, _objective, contracts, artifacts = _inputs(bundle)
-    packet = derive_implement_surface(
+    packet = derive_implement_packet(
         flow,
         "agent.systems_architect",
         contracts,
         artifacts,
     )
 
-    assert packet["surface"]["relation"] == "executor"
-    assert packet["surface"]["actor"] == "agent.systems_architect"
+    assert packet["packet"]["relation"] == "executor"
+    assert packet["packet"]["actor"] == "agent.systems_architect"
     assert packet["queues"]["ready_to_execute"] == ["contract.object_model_spec"]
     assert "contract.reducer_spec" in packet["queues"]["blocked"]
     assert packet["producible"] == {
@@ -94,7 +177,7 @@ def test_implement_surface_filters_by_executor():
     )
 
 
-def test_validate_surface_filters_by_consumer():
+def test_validate_packet_filters_by_consumer():
     bundle = _bundle_with_statuses({
         OBJECTIVE_SPEC: "validated",
         AGENT_INSTRUCTIONS: "validated",
@@ -102,22 +185,22 @@ def test_validate_surface_filters_by_consumer():
         REDUCER_SPEC: "rejected",
     })
     flow, _objective, contracts, artifacts = _inputs(bundle)
-    packet = derive_validate_surface(
+    packet = derive_validate_packet(
         flow,
         "agent.systems_engineer",
         contracts,
         artifacts,
     )
 
-    assert packet["surface"]["relation"] == "consumer"
-    assert packet["surface"]["actor"] == "agent.systems_engineer"
+    assert packet["packet"]["relation"] == "consumer"
+    assert packet["packet"]["actor"] == "agent.systems_engineer"
     assert packet["queues"]["needs_validation"] == []
     assert packet["queues"]["rejected"] == ["artifact.reducer_spec"]
     assert packet["contracts"]["needs_validation"] == []
     assert packet["contracts"]["rejected"] == ["contract.reducer_spec"]
     assert packet["actions"]["available"] == []
 
-    ui_packet = derive_validate_surface(
+    ui_packet = derive_validate_packet(
         flow,
         "agent.ui_ux",
         contracts,
@@ -131,32 +214,32 @@ def test_validate_surface_filters_by_consumer():
     ]
 
 
-def test_surface_projection_is_deterministic():
+def test_packet_projection_is_deterministic():
     bundle = _bundle_with_statuses({OBJECTIVE_SPEC: "validated"})
     flow, objective, contracts, artifacts = _inputs(bundle)
-    first = derive_objective_surface(flow, objective, contracts, artifacts)
-    second = derive_objective_surface(flow, objective, contracts, artifacts)
+    first = derive_objective_packet(flow, objective, contracts, artifacts)
+    second = derive_objective_packet(flow, objective, contracts, artifacts)
     assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
 
 
-def test_surface_projection_does_not_mutate_flow():
+def test_packet_projection_does_not_mutate_flow():
     bundle = _bundle_with_statuses({OBJECTIVE_SPEC: "validated"})
     flow, objective, contracts, artifacts = _inputs(bundle)
     before = copy.deepcopy(flow)
-    derive_objective_surface(flow, objective, contracts, artifacts)
-    derive_implement_surface(flow, "agent.product_strategy", contracts, artifacts)
-    derive_validate_surface(flow, "agent.systems_architect", contracts, artifacts)
+    derive_objective_packet(flow, objective, contracts, artifacts)
+    derive_implement_packet(flow, "agent.product_strategy", contracts, artifacts)
+    derive_validate_packet(flow, "agent.systems_architect", contracts, artifacts)
     assert flow == before
 
 
-def test_corus_v1_does_not_import_surfaces():
+def test_corus_v1_does_not_import_fasia():
     for path in CORUS_V1_DIR.glob("*.py"):
         source = path.read_text(encoding="utf-8")
         assert "from fasia" not in source
         assert "import fasia" not in source
 
 
-def test_surfaces_do_not_import_demo_or_ui():
+def test_fasia_does_not_import_demo_or_rendering_code():
     forbidden = ("from demo", "import demo", "React", "HTML", "CSS", "dashboard")
     for path in FASIA_DIR.glob("*.py"):
         source = path.read_text(encoding="utf-8")
@@ -164,13 +247,24 @@ def test_surfaces_do_not_import_demo_or_ui():
             assert term not in source, f"{term} found in {path}"
 
 
-def test_surfaces_do_not_define_owner_role():
+def test_fasia_does_not_define_owner_role():
     for path in FASIA_DIR.glob("*.py"):
         assert "owner" not in path.read_text(encoding="utf-8").lower()
 
 
-def test_surfaces_do_not_encode_job_titles():
-    forbidden = ("Director", "FDE", "CVA", "Engineer", "Architect", "Strategy")
+def test_fasia_does_not_encode_product_or_role_labels():
+    forbidden = (
+        "Coordinate",
+        "Implement",
+        "Neara",
+        "Director",
+        "FDE",
+        "CVA",
+        "Engineer",
+        "Architect",
+        "Owner",
+        "LLM",
+    )
     for path in FASIA_DIR.glob("*.py"):
         source = path.read_text(encoding="utf-8")
         for term in forbidden:

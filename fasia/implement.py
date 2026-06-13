@@ -1,4 +1,4 @@
-"""Executor-relation work packet projection."""
+"""Executor-relation Fasia packet projection."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from fasia.types import (
 )
 
 
-def derive_implement_surface(
+def derive_implement_packet(
     flow: dict[str, Any],
     executor_id: str,
     contracts: list[dict[str, Any]],
@@ -58,8 +58,8 @@ def derive_implement_surface(
     )
 
     return {
-        "surface": {
-            "id": "surface.implement",
+        "packet": {
+            "id": "packet.implement",
             "type": "implement",
             "relation": "executor",
             "actor": executor_id,

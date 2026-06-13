@@ -42,10 +42,12 @@ def test_claims_only_exist_in_demo_or_product_layer():
             assert "Claim" not in path.read_text(encoding="utf-8")
 
 
-def test_surfaces_only_exist_in_demo_or_product_layer():
+def test_fasia_packet_work_stays_out_of_timpos_and_corus_v1():
     for root in ("timpos", "corus_v1"):
         for path in (REPO_ROOT / root).glob("*.py"):
-            assert "Surface" not in path.read_text(encoding="utf-8")
+            source = path.read_text(encoding="utf-8")
+            assert "Surface" not in source
+            assert "Fasia" not in source
 
 
 def test_neara_only_exists_outside_timpos_and_corus_v1():
@@ -54,7 +56,7 @@ def test_neara_only_exists_outside_timpos_and_corus_v1():
             assert "Neara" not in path.read_text(encoding="utf-8")
 
 
-def test_surface_rendering_consumes_flow_but_does_not_change_flow():
+def test_demo_rendering_consumes_flow_but_does_not_change_flow():
     bundle = load_rvo_fixture()
     before = derive(bundle)
     apply_replay(

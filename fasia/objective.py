@@ -1,4 +1,4 @@
-"""Objective-scope work packet projection."""
+"""Objective-scope Fasia packet projection."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 from fasia.types import contract_states_by_id, objective_states_by_id
 
 
-def derive_objective_surface(
+def derive_objective_packet(
     flow: dict[str, Any],
     objective: dict[str, Any],
     contracts: list[dict[str, Any]],
@@ -57,8 +57,8 @@ def derive_objective_surface(
     })
 
     return {
-        "surface": {
-            "id": "surface.objective",
+        "packet": {
+            "id": "packet.objective",
             "type": "objective",
             "relation": "objective_scope",
             "subject": objective["id"],

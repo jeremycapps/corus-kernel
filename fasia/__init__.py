@@ -1,11 +1,16 @@
-"""Deterministic relation-scoped work packet projections."""
+"""Deterministic Fasia context translation and packet projections."""
 
-from fasia.implement import derive_implement_surface
-from fasia.objective import derive_objective_surface
-from fasia.validate import derive_validate_surface
+from fasia.context import Context
+from fasia.implement import derive_implement_packet
+from fasia.objective import derive_objective_packet
+from fasia.translation import Translation, translate_context
+from fasia.validate import derive_validate_packet
 
 __all__ = [
-    "derive_implement_surface",
-    "derive_objective_surface",
-    "derive_validate_surface",
+    "Context",
+    "Translation",
+    "derive_implement_packet",
+    "derive_objective_packet",
+    "derive_validate_packet",
+    "translate_context",
 ]

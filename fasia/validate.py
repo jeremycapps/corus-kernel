@@ -1,4 +1,4 @@
-"""Consumer-relation work packet projection."""
+"""Consumer-relation Fasia packet projection."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from fasia.types import (
 )
 
 
-def derive_validate_surface(
+def derive_validate_packet(
     flow: dict[str, Any],
     consumer_id: str,
     contracts: list[dict[str, Any]],
@@ -62,8 +62,8 @@ def derive_validate_surface(
     )
 
     return {
-        "surface": {
-            "id": "surface.validate",
+        "packet": {
+            "id": "packet.validate",
             "type": "validate",
             "relation": "consumer",
             "actor": consumer_id,
