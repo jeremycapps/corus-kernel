@@ -6,7 +6,7 @@ Timpos preserves observed state over time.
 
 Corus derives coordination flow from current artifact state.
 
-Surfaces render role-specific meaning.
+Surfaces project coordination flow into relation-scoped work packets.
 
 The keeper:
 
@@ -14,14 +14,24 @@ The keeper:
 Moments preserve history.
 Heads expose state.
 Reducers derive work.
-Surfaces render meaning.
+Surfaces project work state.
+```
+
+Current stack:
+
+```text
+Timpos remembers.
+Corus coordinates.
+Surfaces project work state.
+Agents act.
+Renderers display.
 ```
 
 Timpos is the primitive replay layer. It records observations and exposes the current state of opaque objects. It does not know what those objects mean.
 
 Corus is the coordination layer. It consumes current artifact status, validates declared coordination objects, and derives readiness, output state, objective satisfaction, and next work.
 
-The surface layer is the product layer. It turns replay and reducer output into role-specific meaning, demo narrative, evidence views, and human-facing interaction.
+The surface layer is an engine-owned projection layer. It turns Corus flow into deterministic Objective, Implement, and Validate work packets. Product renderers, agents, APIs, commands, dashboards, and demos consume those packets.
 
 ## 2. Near-Term Module Boundary
 
@@ -36,6 +46,9 @@ corus_v1/
 
 demo/
   product rendering, claims, evidence, and workflow replay
+
+fasia/
+  deterministic relation-scoped work packets
 ```
 
 Allowed dependency direction:
@@ -43,6 +56,9 @@ Allowed dependency direction:
 ```text
 demo -> corus_v1
 demo -> timpos
+demo -> fasia
+fasia -> corus_v1
+fasia -> timpos, only when replay trace is needed
 corus_v1 -> timpos only through adapter-shaped data
 timpos -> standard library only
 ```
@@ -52,7 +68,12 @@ Forbidden direction:
 ```text
 timpos -> corus_v1
 timpos -> demo
+timpos -> fasia
 corus_v1 -> demo
+corus_v1 -> fasia
+fasia -> demo
+fasia -> UI components
+fasia -> agent runtime behavior
 ```
 
 ## 3. Eventual Repo Split Criteria
@@ -126,19 +147,133 @@ no demo-specific vocabulary
 Surface constraints:
 
 ```text
-may use replay output
-may use Corus flow
-may use claims, evidence, and product narrative
+deterministic for the same flow and inputs
+structured as fields, queues, actions, refs, and trace IDs
+relation-scoped over objective_scope, executor, or consumer
+may use claims and evidence only if supplied by the product layer
 must not change Corus reducer semantics
 must not introduce Timpos primitives
-agentic interpretation belongs here
+must not call LLMs
+must not render UI
+must not encode job titles
 ```
 
-Future source, claim, evidence, and surface work must stay out of `corus_v1`.
+Future source, claim, and evidence work must stay out of `corus_v1`.
 Those concepts belong in the demo/product layer unless a future architecture
-decision explicitly changes the boundary.
+decision explicitly changes the boundary. Surface packets belong in `fasia/`;
+product renderers may relabel Objective / Implement / Validate as
+Coordinate / Implement / Value.
 
-## 6. Migration Plan
+## 6. Surface Layer Boundary
+
+A surface is a deterministic work-state projection over a Corus coordination
+relation.
+
+A surface is not:
+
+```text
+a UI page
+a dashboard
+an API endpoint
+an autonomous agent
+an LLM summary
+a product narrative
+a demo-specific view
+```
+
+Surface mapping follows Corus relations:
+
+```text
+Objective scope   -> Objective surface
+Contract.executor -> Implement surface
+Contract.consumer -> Validate surface
+```
+
+Objective shows the state of the goal.
+
+Implement shows what can be produced.
+
+Validate shows what can be accepted or rejected.
+
+Agents, commands, APIs, dashboards, and UIs consume surface packets. `corus_v1`
+must not import `fasia`. `fasia` must not import demo, UI, or agent runtime
+behavior. Product renderers may relabel Objective / Implement /
+Validate as Coordinate / Implement / Value.
+
+Surface invariants:
+
+```text
+1. Surfaces are deterministic.
+2. Surfaces are structured.
+3. Surfaces are relation-scoped.
+4. Surfaces remain engine-owned.
+5. Surfaces do not mutate kernel state.
+6. Surfaces are not UI.
+7. Surfaces do not call LLMs.
+8. Surfaces do not encode job titles.
+```
+
+Dependency diagram:
+
+```text
++------------------+
+|     timpos       |
+|------------------|
+| Position         |
+| Timpo            |
+| Moment           |
+| ObjectHead       |
+| Replay           |
++---------+--------+
+          |
+          | replay_to_current_state()
+          v
++--------------------------+
+| object_state_map         |
++------------+-------------+
+             |
+             | adapter maps artifact.* objects
+             v
++--------------------------+
+| artifact_status_map      |
++------------+-------------+
+             |
+             v
++------------------+
+|    corus_v1      |
+|------------------|
+| Objective        |
+| Agent            |
+| Contract         |
+| Artifact         |
+| Reducer          |
++---------+--------+
+          |
+          | derive()
+          v
++------------------+
+| flow / next work |
++---------+--------+
+          |
+          | relation-scoped projection
+          v
++------------------+
+|      fasia       |
+|------------------|
+| Objective        |
+| Implement        |
+| Validate         |
++---------+--------+
+          |
+          | consumed by
+          v
++------------------+
+| demo / API / UI  |
+| agents / CLI     |
++------------------+
+```
+
+## 7. Migration Plan
 
 ```text
 1. Keep corus_v1 reducer behavior stable.
@@ -147,10 +282,11 @@ decision explicitly changes the boundary.
 4. Add tests for primitive replay determinism and dependency direction.
 5. Keep demo/product concepts under demo/.
 6. Move demo material into demo/neara/ only once the UI/product surface stabilizes.
-7. Revisit repo split once APIs and ownership stabilize.
+7. Keep deterministic surface packets in fasia/.
+8. Revisit repo split once APIs and ownership stabilize.
 ```
 
-## 7. Test Plan
+## 8. Test Plan
 
 Tests should prove:
 
@@ -162,18 +298,24 @@ timpos has no corus_v1 or demo imports
 corus_v1 has no demo imports
 corus_v1 still derives from declared artifact statuses without timpos
 corus_v1 can consume replay output through replay_adapter
+fasia projects Objective / Implement / Validate packets
+fasia does not import demo or runtime behavior
 demo can use both timpos and corus_v1 without changing reducer output
 ```
 
-## 8. Keeper
+## 9. Keeper
 
 ```text
 Timpos preserves observed state over time.
 Corus derives coordination flow from current artifact state.
-Surfaces render role-specific meaning.
+Surfaces project coordination flow into relation-scoped work packets.
 
 Moments preserve history.
 Heads expose state.
 Reducers derive work.
-Surfaces render meaning.
+Surfaces project work state.
+
+Objective projects goal state.
+Implement projects production state.
+Validate projects review state.
 ```
