@@ -8,6 +8,18 @@ Corus Kernel derives context from minimal declared objects. Sources enter as raw
 source → interpret → artifact/contract → boundary → context
 ```
 
+## Layer Boundary
+
+```text
+Timpos = memory
+Corus = coordination
+Surfaces = meaning
+```
+
+Timpos preserves observed state over time. Corus derives coordination flow from current artifact state. Surfaces render role-specific meaning.
+
+Source, claim, evidence, and surface work belongs outside `corus_v1`. Keep it in the demo/product layer until there is a deliberate boundary change.
+
 **Declared objects** are authored YAML: `source`, `artifact`, `contract`, `role`, `team`, `profile`, `boundary`, `moment`, `timpo`.
 
 **Derived objects** are computed by `derive`: `role_view`, `team_view`, `artifact_status`, `contract_status`, `context`, `context_state`, `trace`, `surface` (roadmap).
@@ -34,6 +46,7 @@ The Neara RVO boundary fixture lives at `tests/fixtures/neara_rvo_boundary_v0/`.
 ## Documentation
 
 - [Architecture](docs/architecture.md) — declared vs derived, source roles, interpretation, context derivation
+- [Timpos / Corus / Surface boundary](docs/architecture/timpos_corus_boundary.md) — memory, coordination, and meaning layers
 - [Neara RVO fixture](docs/neara_rvo_fixture.md) — fixture walkthrough
 - [ROADMAP.md](ROADMAP.md) — post-v0 items (commits, resolution_state, focus, surfaces)
 

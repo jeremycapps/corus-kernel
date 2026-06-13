@@ -193,6 +193,9 @@ def apply_replay(
 
     kernel_output = derive(state["bundle"])
     return {
+        # TODO: temporary test seam while proving the replay/coordination boundary.
+        # Remove once boundary tests assert through a public adapter instead.
+        "stateful_bundle": state["bundle"],
         "state": {
             "claims": state["claims"],
             "source_refs": state["source_refs"],

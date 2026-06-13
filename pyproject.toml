@@ -25,7 +25,7 @@ corus-demo-rvo = "demo.rvo_replay:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["corus_kernel*", "corus_agents*", "corus_v1*", "demo*"]
+include = ["corus_kernel*", "corus_agents*", "corus_v1*", "demo*", "timpos*"]
 
 [tool.setuptools.package-data]
 demo = ["fixtures/rvo/*.yaml", "*.html"]
