@@ -11,10 +11,9 @@ Fasia structures context through Relations.
 The keeper:
 
 ```text
-Moments preserve history.
-Heads expose state.
-Reducers derive work.
-Fasia contextualizes.
+Moment records.
+Contract coordinates.
+Relation contextualizes.
 ```
 
 Current stack:
@@ -31,7 +30,7 @@ Timpos is the primitive replay layer. It records observations and exposes the cu
 
 Corus is the coordination layer. It consumes current artifact status, validates declared coordination objects, and derives readiness, output state, objective satisfaction, and next work.
 
-Fasia is the relation layer. Its primitive is Relation: id, subject, predicate, object, and state. Context is derived by selecting relations around a subject, role, claim, artifact, objective, or state. Its first structured packet outputs are Objective, Implement, and Validate packets over Corus flow.
+Fasia is the relation layer. Its primitive is Relation: id, initiator, target, sources, and objectives. Relation existence is authored; path state is derived. Its first structured packet outputs are Objective, Implement, and Validate packets over Corus flow.
 
 ## 2. Near-Term Module Boundary
 
@@ -169,16 +168,17 @@ Fasia structures context through Relations.
 The primitive relation shape is:
 
 ```text
-Relation = id + subject + predicate + object + state
+Relation = id + initiator + target + sources[] + objectives[]
 ```
 
-Context is derived:
+A derived relation path is computed:
 
 ```text
-context = selected relations around a subject, role, claim, artifact, objective, or state
+DerivedRelation = relation + path + label + reasons[]
+path = open | closed
 ```
 
-Translation is what Fasia does. Relation is what Fasia stores and derives over. Context is what Fasia makes addressable.
+Translation is what Fasia does. Relation is what Fasia declares. Path state is what Fasia derives.
 
 Initial translation modes:
 
@@ -335,6 +335,12 @@ Fasia contextualizes.
 Moments make time addressable.
 Contracts make obligation addressable.
 Relations make context addressable.
+
+Requires gates nodes.
+Relations connect nodes.
+Sources ground relations.
+Objectives scope relations.
+Paths are derived.
 
 Objective projects goal state.
 Implement projects production state.

@@ -6,13 +6,16 @@ import copy
 import json
 from pathlib import Path
 
+import pytest
+
 from corus_v1.derive import derive, with_artifact_status
 from corus_v1.load import load_project
 from fasia import (
     Relation,
-    derive_context,
+    Target,
     derive_implement_packet,
     derive_objective_packet,
+    derive_relation_paths,
     derive_validate_packet,
     translate_relations,
 )
@@ -42,108 +45,270 @@ def _inputs(bundle: dict) -> tuple[dict, dict, list[dict], list[dict]]:
     return flow, objective, contracts, artifacts
 
 
-def test_relation_requires_primitive_fields():
+def _target(
+    target_type: str = "object",
+    target_id: str = "artifact.integration_path",
+) -> Target:
+    return Target(type=target_type, id=target_id, label="Integration path")
+
+
+def _relation(
+    target_type: str = "object",
+    target_id: str = "artifact.integration_path",
+) -> Relation:
+    return Relation(
+        id="relation.rvo_output.integration_path",
+        initiator="artifact.rvo_output",
+        target=_target(target_type, target_id),
+        sources=("source.neara_rvo_context",),
+        objectives=("objective.customer_system_mapping",),
+    )
+
+
+def test_relation_requires_declared_edge_fields():
     relation = Relation(
-        id="relation.customer_team.needs.planning_risk",
-        subject="consumer.customer_team",
-        predicate="needs",
-        object="objective.reduce_planning_risk",
-        state="supported",
-        evidence=("source.public",),
-        trace=("event.source_attached",),
+        id="relation.rvo_output.integration_path",
+        initiator="artifact.rvo_output",
+        target=Target(
+            type="object",
+            id="artifact.integration_path",
+            label="Integration path",
+        ),
+        sources=("source.neara_rvo_context",),
+        objectives=("objective.customer_system_mapping",),
     )
 
     assert relation.as_dict() == {
-        "id": "relation.customer_team.needs.planning_risk",
-        "subject": "consumer.customer_team",
-        "predicate": "needs",
-        "object": "objective.reduce_planning_risk",
-        "state": "supported",
-        "evidence": ["source.public"],
-        "trace": ["event.source_attached"],
+        "id": "relation.rvo_output.integration_path",
+        "initiator": "artifact.rvo_output",
+        "target": {
+            "type": "object",
+            "id": "artifact.integration_path",
+            "label": "Integration path",
+        },
+        "sources": ["source.neara_rvo_context"],
+        "objectives": ["objective.customer_system_mapping"],
     }
 
 
 def test_relation_rejects_empty_fields():
-    try:
+    with pytest.raises(ValueError, match="Relation.initiator"):
         Relation(
-            id="relation.customer_team.needs.planning_risk",
-            subject="",
-            predicate="needs",
-            object="objective.reduce_planning_risk",
-            state="supported",
+            id="relation.rvo_output.integration_path",
+            initiator="",
+            target=_target(),
+            sources=("source.neara_rvo_context",),
+            objectives=("objective.customer_system_mapping",),
         )
-    except ValueError as error:
-        assert str(error) == "Relation.subject must be a non-empty string"
-    else:
-        raise AssertionError("Relation accepted an empty subject")
 
 
-def test_context_is_derived_from_selected_relations():
-    relations = [
+def test_relation_requires_sources_and_objectives():
+    with pytest.raises(ValueError, match="Relation.sources"):
         Relation(
-            id="relation.customer_team.needs.planning_risk",
-            subject="consumer.customer_team",
-            predicate="needs",
-            object="objective.reduce_planning_risk",
-            state="supported",
-        ),
+            id="relation.rvo_output.integration_path",
+            initiator="artifact.rvo_output",
+            target=_target(),
+            sources=(),
+            objectives=("objective.customer_system_mapping",),
+        )
+    with pytest.raises(ValueError, match="Relation.objectives"):
         Relation(
-            id="relation.workflow.supports.operational_clarity",
-            subject="objective.reduce_planning_risk",
-            predicate="supports",
-            object="value.operational_clarity",
-            state="proposed",
-        ),
-    ]
+            id="relation.rvo_output.integration_path",
+            initiator="artifact.rvo_output",
+            target=_target(),
+            sources=("source.neara_rvo_context",),
+            objectives=(),
+        )
 
-    context = derive_context(relations, subject="consumer.customer_team")
 
-    assert context["context"] == {
-        "selected_by": {"subject": "consumer.customer_team"},
-        "relations": ["relation.customer_team.needs.planning_risk"],
+def test_relation_rejects_non_v0_reference_prefixes():
+    with pytest.raises(ValueError, match="Relation.sources entries"):
+        Relation(
+            id="relation.rvo_output.integration_path",
+            initiator="artifact.rvo_output",
+            target=_target(),
+            sources=("document.neara_rvo_context",),
+            objectives=("objective.customer_system_mapping",),
+        )
+    with pytest.raises(ValueError, match="Relation.objectives entries"):
+        Relation(
+            id="relation.rvo_output.integration_path",
+            initiator="artifact.rvo_output",
+            target=_target(),
+            sources=("source.neara_rvo_context",),
+            objectives=("workflow.customer_system_mapping",),
+        )
+
+
+def test_target_type_must_be_object_or_subject():
+    with pytest.raises(ValueError, match="Target.type"):
+        Target(type="workflow", id="artifact.integration_path", label="Integration path")
+
+
+def test_relation_does_not_accept_removed_fields():
+    removed_fields = (
+        "state",
+        "depends_on",
+        "requires",
+        "predicate",
+        "mode",
+        "target_role",
+        "context",
+        "context_view",
+    )
+    base = {
+        "id": "relation.rvo_output.integration_path",
+        "initiator": "artifact.rvo_output",
+        "target": _target(),
+        "sources": ("source.neara_rvo_context",),
+        "objectives": ("objective.customer_system_mapping",),
     }
-    assert context["relations"][0]["object"] == "objective.reduce_planning_risk"
+    for field in removed_fields:
+        with pytest.raises(TypeError):
+            Relation(**{**base, field: "not_allowed"})
+
+
+def test_fasia_derives_object_and_subject_labels_from_path():
+    object_relation = _relation(target_type="object")
+    subject_relation = Relation(
+        id="relation.rvo_output.customer_team",
+        initiator="artifact.rvo_output",
+        target=Target(type="subject", id="subject.customer_team", label="Customer team"),
+        sources=("source.neara_rvo_context",),
+        objectives=("objective.customer_system_mapping",),
+    )
+
+    open_paths = derive_relation_paths(
+        [object_relation, subject_relation],
+        admitted_sources=("source.neara_rvo_context",),
+        active_objectives=("objective.customer_system_mapping",),
+        node_states={
+            "artifact.rvo_output": "present",
+            "artifact.integration_path": "present",
+            "subject.customer_team": "present",
+        },
+    )
+    closed_paths = derive_relation_paths(
+        [object_relation, subject_relation],
+        admitted_sources=(),
+        active_objectives=("objective.customer_system_mapping",),
+        node_states={
+            "artifact.rvo_output": "present",
+            "artifact.integration_path": "present",
+            "subject.customer_team": "present",
+        },
+    )
+
+    open_by_relation = {item["relation"]: item for item in open_paths}
+    closed_by_relation = {item["relation"]: item for item in closed_paths}
+
+    assert (open_by_relation[object_relation.id]["path"], open_by_relation[object_relation.id]["label"]) == (
+        "open",
+        "enables",
+    )
+    assert (open_by_relation[subject_relation.id]["path"], open_by_relation[subject_relation.id]["label"]) == (
+        "open",
+        "affects",
+    )
+    assert (
+        closed_by_relation[object_relation.id]["path"],
+        closed_by_relation[object_relation.id]["label"],
+    ) == ("closed", "blocks")
+    assert (
+        closed_by_relation[subject_relation.id]["path"],
+        closed_by_relation[subject_relation.id]["label"],
+    ) == ("closed", "risks")
+
+
+def test_fasia_derives_closed_path_when_corus_blocks_target_artifact():
+    path = derive_relation_paths(
+        [_relation()],
+        admitted_sources=("source.neara_rvo_context",),
+        active_objectives=("objective.customer_system_mapping",),
+        node_states={
+            "artifact.rvo_output": "present",
+            "artifact.integration_path": "present",
+        },
+        corus_blocked_artifacts=("artifact.integration_path",),
+    )[0]
+
+    assert path == {
+        "relation": "relation.rvo_output.integration_path",
+        "path": "closed",
+        "label": "blocks",
+        "reasons": ["target_blocked_by_corus_readiness"],
+    }
+
+
+def test_fasia_derives_closed_path_when_source_is_not_admitted():
+    path = derive_relation_paths(
+        [_relation()],
+        admitted_sources=(),
+        active_objectives=("objective.customer_system_mapping",),
+        node_states={
+            "artifact.rvo_output": "present",
+            "artifact.integration_path": "present",
+        },
+    )[0]
+
+    assert path["path"] == "closed"
+    assert path["label"] == "blocks"
+    assert path["reasons"] == ["source_not_admitted"]
+
+
+def test_fasia_derives_closed_path_when_objective_is_outside_scope():
+    path = derive_relation_paths(
+        [_relation()],
+        admitted_sources=("source.neara_rvo_context",),
+        active_objectives=("objective.other",),
+        node_states={
+            "artifact.rvo_output": "present",
+            "artifact.integration_path": "present",
+        },
+    )[0]
+
+    assert path["path"] == "closed"
+    assert path["label"] == "blocks"
+    assert path["reasons"] == ["objective_out_of_scope"]
 
 
 def test_translation_edges_are_deterministic_relation_edges():
-    relations = [
-        Relation(
-            id="relation.customer_team.needs.planning_risk",
-            subject="consumer.customer_team",
-            predicate="needs",
-            object="objective.reduce_planning_risk",
-            state="supported",
-        ),
-        Relation(
-            id="relation.workflow.supports.operational_clarity",
-            subject="objective.reduce_planning_risk",
-            predicate="supports",
-            object="value.operational_clarity",
-            state="proposed",
-        ),
-    ]
+    relations = [_relation()]
 
     discovery = translate_relations(
         relations,
         "discovery",
-        subject="consumer.customer_team",
-        input_refs=("consumer.customer_team",),
-        output_refs=("objective.reduce_planning_risk",),
+        admitted_sources=("source.neara_rvo_context",),
+        active_objectives=("objective.customer_system_mapping",),
+        node_states={
+            "artifact.rvo_output": "present",
+            "artifact.integration_path": "present",
+        },
+        input_refs=("artifact.rvo_output",),
+        output_refs=("artifact.integration_path",),
     )
-    strategy = translate_relations(relations, "strategy")
-    product = translate_relations(relations, "product")
+    strategy = translate_relations(
+        relations,
+        "strategy",
+        admitted_sources=("source.neara_rvo_context",),
+        active_objectives=("objective.customer_system_mapping",),
+    )
+    product = translate_relations(
+        relations,
+        "product",
+        admitted_sources=("source.neara_rvo_context",),
+        active_objectives=("objective.customer_system_mapping",),
+    )
 
     assert discovery["translation"] == {
         "mode": "discovery",
         "source": "consumer",
         "target": "objective",
-        "input_refs": ["consumer.customer_team"],
-        "output_refs": ["objective.reduce_planning_risk"],
+        "input_refs": ["artifact.rvo_output"],
+        "output_refs": ["artifact.integration_path"],
     }
-    assert discovery["context"]["relations"] == [
-        "relation.customer_team.needs.planning_risk"
-    ]
+    assert discovery["derived_relations"][0]["path"] == "open"
+    assert discovery["derived_relations"][0]["label"] == "enables"
     assert strategy["translation"]["source"] == "objective"
     assert strategy["translation"]["target"] == "value"
     assert product["translation"]["source"] == "value"
@@ -151,12 +316,13 @@ def test_translation_edges_are_deterministic_relation_edges():
 
 
 def test_unknown_translation_mode_is_rejected():
-    try:
-        translate_relations([], "handoff")
-    except ValueError as error:
-        assert str(error) == "Unknown translation mode: handoff"
-    else:
-        raise AssertionError("Unknown translation mode was accepted")
+    with pytest.raises(ValueError, match="Unknown translation mode"):
+        translate_relations(
+            [],
+            "handoff",
+            admitted_sources=(),
+            active_objectives=(),
+        )
 
 
 def test_objective_packet_projects_objective_scope():
@@ -282,6 +448,30 @@ def test_fasia_does_not_import_demo_or_rendering_code():
         source = path.read_text(encoding="utf-8")
         for term in forbidden:
             assert term not in source, f"{term} found in {path}"
+
+
+def test_fasia_does_not_define_timpos_or_corus_primitives():
+    forbidden = (
+        "class Moment",
+        "class Contract",
+        "class Artifact",
+        "Artifact.requires",
+        "\"requires\"",
+        "'requires'",
+    )
+    for path in FASIA_DIR.glob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        for term in forbidden:
+            assert term not in source, f"{term} found in {path}"
+
+
+def test_fasia_consumes_readiness_only_through_explicit_inputs():
+    for path in FASIA_DIR.glob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        assert "from corus_v1" not in source
+        assert "import corus_v1" not in source
+        assert "from timpos" not in source
+        assert "import timpos" not in source
 
 
 def test_fasia_does_not_define_owner_role():

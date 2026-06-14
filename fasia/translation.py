@@ -1,11 +1,11 @@
-"""Deterministic Fasia translation over relations."""
+"""Deterministic Fasia translation over relation paths."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Optional
 
-from fasia.relation import Relation, derive_context
+from fasia.relation import Relation, derive_relation_paths
 
 TRANSLATION_EDGES: dict[str, tuple[str, str]] = {
     "discovery": ("consumer", "objective"),
@@ -36,26 +36,30 @@ def translate_relations(
     relations: list[Relation],
     mode: str,
     *,
-    subject: Optional[str] = None,
-    predicate: Optional[str] = None,
-    object: Optional[str] = None,
-    state: Optional[str] = None,
+    admitted_sources: tuple[str, ...],
+    active_objectives: tuple[str, ...],
+    node_states: Optional[dict[str, str]] = None,
+    corus_blocked_artifacts: tuple[str, ...] = (),
     input_refs: tuple[str, ...] = (),
     output_refs: tuple[str, ...] = (),
 ) -> dict[str, object]:
-    """Return one declared translation edge over a derived relation context."""
+    """Return one translation edge over derived relation paths."""
     if mode not in TRANSLATION_EDGES:
         raise ValueError(f"Unknown translation mode: {mode}")
     source, target = TRANSLATION_EDGES[mode]
-    context = derive_context(
+    paths = derive_relation_paths(
         relations,
-        subject=subject,
-        predicate=predicate,
-        object=object,
-        state=state,
+        admitted_sources=admitted_sources,
+        active_objectives=active_objectives,
+        node_states=node_states,
+        corus_blocked_artifacts=corus_blocked_artifacts,
     )
     return {
-        **context,
+        "relations": [
+            relation.as_dict()
+            for relation in sorted(relations, key=lambda item: item.id)
+        ],
+        "derived_relations": paths,
         "translation": Translation(
             mode=mode,
             source=source,

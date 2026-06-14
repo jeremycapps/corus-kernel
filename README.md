@@ -29,10 +29,10 @@ Relations make context addressable.
 Fasia primitive:
 
 ```text
-Relation = id + subject + predicate + object + state
+Relation = id + initiator + target + sources[] + objectives[]
 ```
 
-Context is derived by selecting relations around a subject, role, claim, artifact, objective, or state. Translation is what Fasia does over relations.
+Relation existence is authored. Path state is derived. Translation is what Fasia does over relations.
 
 Source, claim, evidence, and Fasia packet work belongs outside `corus_v1`. Keep it in Fasia, demo, or product layers until there is a deliberate boundary change.
 
