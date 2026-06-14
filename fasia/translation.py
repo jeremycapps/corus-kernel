@@ -1,10 +1,11 @@
-"""Deterministic Fasia translation edges."""
+"""Deterministic Fasia translation over relations."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Optional
 
-from fasia.context import Context
+from fasia.relation import Relation, derive_context
 
 TRANSLATION_EDGES: dict[str, tuple[str, str]] = {
     "discovery": ("consumer", "objective"),
@@ -31,22 +32,34 @@ class Translation:
         }
 
 
-def translate_context(
-    context: Context,
+def translate_relations(
+    relations: list[Relation],
     mode: str,
+    *,
+    subject: Optional[str] = None,
+    predicate: Optional[str] = None,
+    object: Optional[str] = None,
+    state: Optional[str] = None,
     input_refs: tuple[str, ...] = (),
     output_refs: tuple[str, ...] = (),
 ) -> dict[str, object]:
-    """Return the declared edge for one context translation mode."""
+    """Return one declared translation edge over a derived relation context."""
     if mode not in TRANSLATION_EDGES:
         raise ValueError(f"Unknown translation mode: {mode}")
-    source_field, target_field = TRANSLATION_EDGES[mode]
+    source, target = TRANSLATION_EDGES[mode]
+    context = derive_context(
+        relations,
+        subject=subject,
+        predicate=predicate,
+        object=object,
+        state=state,
+    )
     return {
-        "context": context.as_dict(),
+        **context,
         "translation": Translation(
             mode=mode,
-            source=getattr(context, source_field),
-            target=getattr(context, target_field),
+            source=source,
+            target=target,
             input_refs=tuple(input_refs),
             output_refs=tuple(output_refs),
         ).as_dict(),

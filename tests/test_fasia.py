@@ -1,4 +1,4 @@
-"""Tests for deterministic Fasia context translation and packets."""
+"""Tests for deterministic Fasia relation translation and packets."""
 
 from __future__ import annotations
 
@@ -9,11 +9,12 @@ from pathlib import Path
 from corus_v1.derive import derive, with_artifact_status
 from corus_v1.load import load_project
 from fasia import (
-    Context,
+    Relation,
+    derive_context,
     derive_implement_packet,
     derive_objective_packet,
     derive_validate_packet,
-    translate_context,
+    translate_relations,
 )
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -41,81 +42,117 @@ def _inputs(bundle: dict) -> tuple[dict, dict, list[dict], list[dict]]:
     return flow, objective, contracts, artifacts
 
 
-def test_context_requires_primitive_fields():
-    context = Context(
-        subject="subject.network_plan",
-        consumer="consumer.customer_team",
-        objective="objective.reduce_planning_risk",
-        value="value.operational_clarity",
-        state="state.open",
+def test_relation_requires_primitive_fields():
+    relation = Relation(
+        id="relation.customer_team.needs.planning_risk",
+        subject="consumer.customer_team",
+        predicate="needs",
+        object="objective.reduce_planning_risk",
+        state="supported",
+        evidence=("source.public",),
+        trace=("event.source_attached",),
     )
 
-    assert context.as_dict() == {
-        "subject": "subject.network_plan",
-        "consumer": "consumer.customer_team",
-        "objective": "objective.reduce_planning_risk",
-        "value": "value.operational_clarity",
-        "state": "state.open",
+    assert relation.as_dict() == {
+        "id": "relation.customer_team.needs.planning_risk",
+        "subject": "consumer.customer_team",
+        "predicate": "needs",
+        "object": "objective.reduce_planning_risk",
+        "state": "supported",
+        "evidence": ["source.public"],
+        "trace": ["event.source_attached"],
     }
 
 
-def test_context_rejects_empty_fields():
+def test_relation_rejects_empty_fields():
     try:
-        Context(
-            subject="subject.network_plan",
-            consumer="",
-            objective="objective.reduce_planning_risk",
-            value="value.operational_clarity",
-            state="state.open",
+        Relation(
+            id="relation.customer_team.needs.planning_risk",
+            subject="",
+            predicate="needs",
+            object="objective.reduce_planning_risk",
+            state="supported",
         )
     except ValueError as error:
-        assert str(error) == "Context.consumer must be a non-empty string"
+        assert str(error) == "Relation.subject must be a non-empty string"
     else:
-        raise AssertionError("Context accepted an empty consumer")
+        raise AssertionError("Relation accepted an empty subject")
 
 
-def test_translation_edges_are_deterministic_context_edges():
-    context = Context(
-        subject="subject.network_plan",
-        consumer="consumer.customer_team",
-        objective="objective.reduce_planning_risk",
-        value="value.operational_clarity",
-        state="state.open",
-    )
+def test_context_is_derived_from_selected_relations():
+    relations = [
+        Relation(
+            id="relation.customer_team.needs.planning_risk",
+            subject="consumer.customer_team",
+            predicate="needs",
+            object="objective.reduce_planning_risk",
+            state="supported",
+        ),
+        Relation(
+            id="relation.workflow.supports.operational_clarity",
+            subject="objective.reduce_planning_risk",
+            predicate="supports",
+            object="value.operational_clarity",
+            state="proposed",
+        ),
+    ]
 
-    discovery = translate_context(
-        context,
+    context = derive_context(relations, subject="consumer.customer_team")
+
+    assert context["context"] == {
+        "selected_by": {"subject": "consumer.customer_team"},
+        "relations": ["relation.customer_team.needs.planning_risk"],
+    }
+    assert context["relations"][0]["object"] == "objective.reduce_planning_risk"
+
+
+def test_translation_edges_are_deterministic_relation_edges():
+    relations = [
+        Relation(
+            id="relation.customer_team.needs.planning_risk",
+            subject="consumer.customer_team",
+            predicate="needs",
+            object="objective.reduce_planning_risk",
+            state="supported",
+        ),
+        Relation(
+            id="relation.workflow.supports.operational_clarity",
+            subject="objective.reduce_planning_risk",
+            predicate="supports",
+            object="value.operational_clarity",
+            state="proposed",
+        ),
+    ]
+
+    discovery = translate_relations(
+        relations,
         "discovery",
+        subject="consumer.customer_team",
         input_refs=("consumer.customer_team",),
         output_refs=("objective.reduce_planning_risk",),
     )
-    strategy = translate_context(context, "strategy")
-    product = translate_context(context, "product")
+    strategy = translate_relations(relations, "strategy")
+    product = translate_relations(relations, "product")
 
     assert discovery["translation"] == {
         "mode": "discovery",
-        "source": "consumer.customer_team",
-        "target": "objective.reduce_planning_risk",
+        "source": "consumer",
+        "target": "objective",
         "input_refs": ["consumer.customer_team"],
         "output_refs": ["objective.reduce_planning_risk"],
     }
-    assert strategy["translation"]["source"] == "objective.reduce_planning_risk"
-    assert strategy["translation"]["target"] == "value.operational_clarity"
-    assert product["translation"]["source"] == "value.operational_clarity"
-    assert product["translation"]["target"] == "consumer.customer_team"
+    assert discovery["context"]["relations"] == [
+        "relation.customer_team.needs.planning_risk"
+    ]
+    assert strategy["translation"]["source"] == "objective"
+    assert strategy["translation"]["target"] == "value"
+    assert product["translation"]["source"] == "value"
+    assert product["translation"]["target"] == "consumer"
 
 
 def test_unknown_translation_mode_is_rejected():
-    context = Context(
-        subject="subject.network_plan",
-        consumer="consumer.customer_team",
-        objective="objective.reduce_planning_risk",
-        value="value.operational_clarity",
-        state="state.open",
-    )
-
     try:
-        translate_context(context, "handoff")
+        translate_relations([], "handoff")
     except ValueError as error:
         assert str(error) == "Unknown translation mode: handoff"
     else:

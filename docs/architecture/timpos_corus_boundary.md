@@ -6,7 +6,7 @@ Timpos preserves observed state over time.
 
 Corus derives coordination flow from current artifact state.
 
-Fasia structures context through deterministic translation.
+Fasia structures context through Relations.
 
 The keeper:
 
@@ -14,7 +14,7 @@ The keeper:
 Moments preserve history.
 Heads expose state.
 Reducers derive work.
-Fasia translates context.
+Fasia contextualizes.
 ```
 
 Current stack:
@@ -22,7 +22,7 @@ Current stack:
 ```text
 Timpos remembers.
 Corus coordinates.
-Fasia translates.
+Fasia contextualizes.
 Agents act.
 Renderers display.
 ```
@@ -31,7 +31,7 @@ Timpos is the primitive replay layer. It records observations and exposes the cu
 
 Corus is the coordination layer. It consumes current artifact status, validates declared coordination objects, and derives readiness, output state, objective satisfaction, and next work.
 
-Fasia is the context-translation layer. Its primitive context is subject plus consumer, objective, value, and state. Its first structured packet outputs are Objective, Implement, and Validate packets over Corus flow.
+Fasia is the relation layer. Its primitive is Relation: id, subject, predicate, object, and state. Context is derived by selecting relations around a subject, role, claim, artifact, objective, or state. Its first structured packet outputs are Objective, Implement, and Validate packets over Corus flow.
 
 ## 2. Near-Term Module Boundary
 
@@ -48,7 +48,7 @@ demo/
   product rendering, claims, evidence, and workflow replay
 
 fasia/
-  deterministic context translation and packets
+  deterministic relations, translation, and packets
 ```
 
 Allowed dependency direction:
@@ -164,15 +164,23 @@ decision explicitly changes the boundary. Fasia packets belong in `fasia/`.
 
 ## 6. Fasia Boundary
 
-Fasia structures context by translating between consumer, objective, and value.
+Fasia structures context through Relations.
 
-The primitive context shape is:
+The primitive relation shape is:
 
 ```text
-Context = subject + consumer + objective + value + state
+Relation = id + subject + predicate + object + state
 ```
 
-Translation is the umbrella operation:
+Context is derived:
+
+```text
+context = selected relations around a subject, role, claim, artifact, objective, or state
+```
+
+Translation is what Fasia does. Relation is what Fasia stores and derives over. Context is what Fasia makes addressable.
+
+Initial translation modes:
 
 ```text
 Discovery: consumer -> objective
@@ -180,7 +188,7 @@ Strategy: objective -> value
 Product: value -> consumer
 ```
 
-Fasia packets are structured outputs. They are not the whole of Fasia.
+Fasia packets are structured outputs over relations and Corus flow. They are not the whole of Fasia.
 
 A Fasia packet is not:
 
@@ -264,12 +272,12 @@ Dependency diagram:
 | flow / next work |
 +---------+--------+
           |
-          | context translation / packet projection
+          | relation translation / packet projection
           v
 +------------------+
 |      fasia       |
 |------------------|
-| Context          |
+| Relation         |
 | Translation      |
 | Packets          |
 +---------+--------+
@@ -307,7 +315,7 @@ timpos has no corus_v1 or demo imports
 corus_v1 has no demo imports
 corus_v1 still derives from declared artifact statuses without timpos
 corus_v1 can consume replay output through replay_adapter
-fasia translates context and emits Objective / Implement / Validate packets
+fasia contextualizes with Relations and emits Objective / Implement / Validate packets
 fasia does not import demo or runtime behavior
 demo can use both timpos and corus_v1 without changing reducer output
 ```
@@ -317,12 +325,16 @@ demo can use both timpos and corus_v1 without changing reducer output
 ```text
 Timpos preserves observed state over time.
 Corus derives coordination flow from current artifact state.
-Fasia structures context through translation.
+Fasia structures context through Relations.
 
 Moments preserve history.
 Heads expose state.
 Reducers derive work.
-Fasia translates context.
+Fasia contextualizes.
+
+Moments make time addressable.
+Contracts make obligation addressable.
+Relations make context addressable.
 
 Objective projects goal state.
 Implement projects production state.

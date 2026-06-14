@@ -13,18 +13,26 @@ source → interpret → artifact/contract → boundary → context
 ```text
 Timpos = memory
 Corus = coordination
-Fasia = context translation
+Fasia = relation
 ```
 
-Timpos structures time through Moments. Corus structures obligation through Contracts. Fasia structures context through translation.
+Timpos structures time through Moments. Corus structures obligation through Contracts. Fasia structures context through Relations.
 
-Fasia context is:
+The keeper:
 
 ```text
-Context = subject + consumer + objective + value + state
+Moments make time addressable.
+Contracts make obligation addressable.
+Relations make context addressable.
 ```
 
-Translation is what Fasia does. Discovery translates consumer context into objective. Strategy translates objective into value. Product translates value into consumer experience.
+Fasia primitive:
+
+```text
+Relation = id + subject + predicate + object + state
+```
+
+Context is derived by selecting relations around a subject, role, claim, artifact, objective, or state. Translation is what Fasia does over relations.
 
 Source, claim, evidence, and Fasia packet work belongs outside `corus_v1`. Keep it in Fasia, demo, or product layers until there is a deliberate boundary change.
 
@@ -54,7 +62,7 @@ The Neara RVO boundary fixture lives at `tests/fixtures/neara_rvo_boundary_v0/`.
 ## Documentation
 
 - [Architecture](docs/architecture.md) — declared vs derived, source roles, interpretation, context derivation
-- [Timpos / Corus / Fasia boundary](docs/architecture/timpos_corus_boundary.md) — memory, coordination, and context translation layers
+- [Timpos / Corus / Fasia boundary](docs/architecture/timpos_corus_boundary.md) — memory, coordination, and relation layers
 - [Neara RVO fixture](docs/neara_rvo_fixture.md) — fixture walkthrough
 - [ROADMAP.md](ROADMAP.md) — post-v0 items (commits, resolution_state, focus)
 
