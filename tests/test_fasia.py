@@ -11,8 +11,14 @@ import pytest
 from corus_v1.derive import derive, with_artifact_status
 from corus_v1.load import load_project
 from fasia import (
+    DISCOVERY,
+    PRODUCT,
     Relation,
+    STRATEGY,
+    TRANSLATION_EDGES,
+    TRANSLATION_MODES,
     Target,
+    classify_translation_mode,
     derive_implement_packet,
     derive_objective_packet,
     derive_relation_paths,
@@ -315,6 +321,89 @@ def test_translation_edges_are_deterministic_relation_edges():
     assert product["translation"]["target"] == "consumer"
 
 
+def test_fasia_defines_translation_modes_and_edges():
+    assert TRANSLATION_MODES == ("discovery", "strategy", "product")
+    assert DISCOVERY == "discovery"
+    assert STRATEGY == "strategy"
+    assert PRODUCT == "product"
+    assert TRANSLATION_EDGES == {
+        "discovery": ("consumer", "objective"),
+        "strategy": ("objective", "value"),
+        "product": ("value", "consumer"),
+    }
+
+
+def test_classify_translation_mode_uses_obvious_node_roles_only():
+    discovery = Relation(
+        id="relation.consumer.objective",
+        initiator="consumer.customer_team",
+        target=Target(
+            type="object",
+            id="objective.customer_system_mapping",
+            label="Customer system mapping",
+        ),
+        sources=("source.neara_rvo_context",),
+        objectives=("objective.customer_system_mapping",),
+    )
+    strategy = Relation(
+        id="relation.objective.value",
+        initiator="objective.customer_system_mapping",
+        target=Target(
+            type="object",
+            id="value.implementation_readiness",
+            label="Implementation readiness",
+        ),
+        sources=("source.neara_rvo_context",),
+        objectives=("objective.customer_system_mapping",),
+    )
+    product = Relation(
+        id="relation.value.consumer",
+        initiator="value.implementation_readiness",
+        target=Target(
+            type="subject",
+            id="consumer.customer_team",
+            label="Customer team",
+        ),
+        sources=("source.neara_rvo_context",),
+        objectives=("objective.customer_system_mapping",),
+    )
+
+    assert classify_translation_mode(discovery) == "discovery"
+    assert classify_translation_mode(strategy) == "strategy"
+    assert classify_translation_mode(product) == "product"
+    assert classify_translation_mode(_relation()) is None
+
+
+def test_translation_mode_does_not_alter_relation_path_or_readiness_inputs():
+    relations = [_relation()]
+    readiness_inputs = {
+        "admitted_sources": ("source.neara_rvo_context",),
+        "active_objectives": ("objective.customer_system_mapping",),
+        "node_states": {
+            "artifact.rvo_output": "present",
+            "artifact.integration_path": "present",
+        },
+        "corus_blocked_artifacts": ("artifact.integration_path",),
+    }
+    expected_paths = derive_relation_paths(relations, **readiness_inputs)
+
+    outputs = [
+        translate_relations(relations, mode, **readiness_inputs)
+        for mode in TRANSLATION_MODES
+    ]
+
+    assert all(output["derived_relations"] == expected_paths for output in outputs)
+    assert readiness_inputs == {
+        "admitted_sources": ("source.neara_rvo_context",),
+        "active_objectives": ("objective.customer_system_mapping",),
+        "node_states": {
+            "artifact.rvo_output": "present",
+            "artifact.integration_path": "present",
+        },
+        "corus_blocked_artifacts": ("artifact.integration_path",),
+    }
+
+
 def test_unknown_translation_mode_is_rejected():
     with pytest.raises(ValueError, match="Unknown translation mode"):
         translate_relations(
@@ -460,6 +549,30 @@ def test_fasia_does_not_define_timpos_or_corus_primitives():
         "'requires'",
     )
     for path in FASIA_DIR.glob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        for term in forbidden:
+            assert term not in source, f"{term} found in {path}"
+
+
+def test_fasia_does_not_add_requester_audience_context_or_value_types():
+    forbidden = (
+        "class Context",
+        "class ContextView",
+        "class Value",
+        "requester",
+        "audience",
+        "Relation.mode",
+        "Relation.state",
+    )
+    for path in FASIA_DIR.glob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        for term in forbidden:
+            assert term not in source, f"{term} found in {path}"
+
+
+def test_relation_translation_layer_does_not_add_packet_or_surface_models():
+    forbidden = ("packet", "surface", "requester", "audience")
+    for path in (FASIA_DIR / "relation.py", FASIA_DIR / "translation.py"):
         source = path.read_text(encoding="utf-8")
         for term in forbidden:
             assert term not in source, f"{term} found in {path}"

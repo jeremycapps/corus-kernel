@@ -7,11 +7,16 @@ from typing import Optional
 
 from fasia.relation import Relation, derive_relation_paths
 
+DISCOVERY = "discovery"
+STRATEGY = "strategy"
+PRODUCT = "product"
+
 TRANSLATION_EDGES: dict[str, tuple[str, str]] = {
-    "discovery": ("consumer", "objective"),
-    "strategy": ("objective", "value"),
-    "product": ("value", "consumer"),
+    DISCOVERY: ("consumer", "objective"),
+    STRATEGY: ("objective", "value"),
+    PRODUCT: ("value", "consumer"),
 }
+TRANSLATION_MODES = tuple(TRANSLATION_EDGES)
 
 
 @dataclass(frozen=True)
@@ -30,6 +35,16 @@ class Translation:
             "input_refs": list(self.input_refs),
             "output_refs": list(self.output_refs),
         }
+
+
+def classify_translation_mode(relation: Relation) -> Optional[str]:
+    """Classify obvious relation movement from node id prefixes."""
+    initiator_role = _node_role(relation.initiator)
+    target_role = _node_role(relation.target.id)
+    for mode, edge in TRANSLATION_EDGES.items():
+        if (initiator_role, target_role) == edge:
+            return mode
+    return None
 
 
 def translate_relations(
@@ -68,3 +83,10 @@ def translate_relations(
             output_refs=tuple(output_refs),
         ).as_dict(),
     }
+
+
+def _node_role(node_id: str) -> Optional[str]:
+    for role in ("consumer", "objective", "value"):
+        if node_id.startswith(f"{role}."):
+            return role
+    return None

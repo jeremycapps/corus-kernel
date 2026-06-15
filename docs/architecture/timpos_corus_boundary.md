@@ -180,13 +180,50 @@ path = open | closed
 
 Translation is what Fasia does. Relation is what Fasia declares. Path state is what Fasia derives.
 
-Initial translation modes:
+## 7. Fasia Translation Modes v0
+
+Relation declares a contextual edge.
+
+Path says whether that edge can currently count.
+
+Translation mode says what movement of context the edge supports.
+
+The forward translation loop is:
 
 ```text
-Discovery: consumer -> objective
-Strategy: objective -> value
-Product: value -> consumer
+consumer -> discovery -> objective
+objective -> strategy -> value
+value -> product -> consumer
 ```
+
+Definitions:
+
+```text
+Discovery translates consumer context into what should be pursued.
+Strategy translates objective into why it matters.
+Product translates value back into something usable by the consumer.
+```
+
+Keeper:
+
+```text
+Relations connect.
+Paths open.
+Translations move context.
+```
+
+Translation modes are Fasia vocabulary. Automatic mode derivation requires
+stable node role conventions, such as `consumer.* -> objective.*`,
+`objective.* -> value.*`, and `value.* -> consumer.*`. Fasia v0 does not add a
+`Relation.mode` field.
+
+Packets are above this layer.
+
+UI/rendering is above this layer.
+
+Agent runtime is above this layer.
+
+## 8. Fasia Packet Boundary
 
 Fasia packets are structured outputs over relations and Corus flow. They are not the whole of Fasia.
 
@@ -290,7 +327,7 @@ Dependency diagram:
 +------------------+
 ```
 
-## 7. Migration Plan
+## 9. Migration Plan
 
 ```text
 1. Keep corus_v1 reducer behavior stable.
@@ -303,7 +340,7 @@ Dependency diagram:
 8. Revisit repo split once APIs and ownership stabilize.
 ```
 
-## 8. Test Plan
+## 10. Test Plan
 
 Tests should prove:
 
@@ -320,7 +357,7 @@ fasia does not import demo or runtime behavior
 demo can use both timpos and corus_v1 without changing reducer output
 ```
 
-## 9. Keeper
+## 11. Keeper
 
 ```text
 Timpos preserves observed state over time.
@@ -341,6 +378,14 @@ Relations connect nodes.
 Sources ground relations.
 Objectives scope relations.
 Paths are derived.
+
+Relations connect.
+Paths open.
+Translations move context.
+
+Relation declares possibility.
+Path says whether it can count.
+Translation says what movement of context it supports.
 
 Objective projects goal state.
 Implement projects production state.
