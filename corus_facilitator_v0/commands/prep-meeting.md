@@ -24,14 +24,14 @@ For each candidate WorkItem:
 2. Check authority requirements.
 3. Check whether the closure surface has the right mode:
    - `async`
-   - `1:1`
+   - `one_on_one`
    - `meeting_with_people`
 4. Classify the item:
    - can close here
    - cannot close: missing proof
    - cannot close: missing authority
    - should be async
-   - should be 1:1
+   - should be one_on_one
    - should move to another meeting
    - should not be discussed
 5. Build the meeting agenda only from items that can close or need explicit routing.
@@ -59,7 +59,7 @@ meeting_prep:
   should_be_async:
     - work_item_id:
       reason:
-  should_be_1_1:
+  should_be_one_on_one:
     - work_item_id:
       reason:
   should_not_discuss:
@@ -73,7 +73,7 @@ meeting_prep:
 - If proof is missing, say exactly what proof is missing.
 - If authority is missing, say exactly who or what role is missing.
 - If an item only needs proof, prefer async.
-- If one person can resolve the item, prefer `1:1`.
+- If one person can resolve the item, prefer `one_on_one`.
 - If multiple people must align or decide, keep it in `meeting_with_people`.
 - Do not include broad topics without a closure question.
 
