@@ -1,6 +1,6 @@
 # /corus:record-closure
 
-Use this command after a meeting, async exchange, or 1:1 to update closure memory.
+Use this command after a meeting, async exchange, or one_on_one to update closure memory.
 
 ## Purpose
 
@@ -13,7 +13,7 @@ Meeting notes remember what was said. Closure remembers what was accomplished.
 - WorkItems discussed or routed.
 - Closure surface where the attempt happened.
 - Proof accepted, authority decision made, or reason closure failed.
-- Existing `state/work_items.md` and `state/closure_outcomes.md`.
+- Existing `state/work_items.md` and `state/outcomes.md`.
 
 ## Allowed outcomes
 
@@ -29,7 +29,7 @@ reopened
 ## Output shape
 
 ```yaml
-closure_outcomes:
+outcomes:
   - id: outcome.example
     work_item_id:
     surface_id:
@@ -39,7 +39,7 @@ closure_outcomes:
     missing_proof: []
     missing_authority: []
     reason:
-    next_surface_type: async | 1:1 | meeting_with_people | null
+    next_surface_type: async | one_on_one | meeting_with_people | null
     next_surface_id:
     timestamp:
 ```
