@@ -20,7 +20,7 @@ WorkItem -> ClosureRequirement -> ClosureSurface -> ClosureOutcome -> ClosureMem
 
 - **WorkItem**: unresolved work that can be tested for closure.
 - **ClosureRequirement**: proof and/or authority needed to close the WorkItem.
-- **ClosureSurface**: where closure can happen: `async`, `1:1`, or `meeting_with_people`.
+- **ClosureSurface**: where closure can happen: `async`, `one_on_one`, or `meeting_with_people`.
 - **ClosureOutcome**: what happened to the WorkItem: `created`, `closed`, `blocked`, `moved`, `carried_over`, or `reopened`.
 - **ClosureMemory**: persistent record of what closed, what moved, what stayed blocked, and why.
 
@@ -28,7 +28,7 @@ WorkItem -> ClosureRequirement -> ClosureSurface -> ClosureOutcome -> ClosureMem
 
 - No closure requirement, no meeting agenda item.
 - Async closes with proof.
-- 1:1 closes with a person.
+- one_on_one closes with a person.
 - Meetings close with people.
 - Claude handles ambiguity. Corus preserves closure state.
 - Use Claude to find the WorkItems. Use Corus to remember whether they close.
@@ -40,6 +40,7 @@ corus_facilitator_v0/
 ├── README.md
 ├── commands/
 │   ├── extract-work-items.md
+│   ├── analyze-transcript.md
 │   ├── prep-meeting.md
 │   ├── facilitate-meeting.md
 │   ├── record-closure.md
@@ -53,7 +54,7 @@ corus_facilitator_v0/
 ├── state/
 │   ├── work_items.md
 │   ├── closure_surfaces.md
-│   ├── closure_outcomes.md
+│   ├── outcomes.md
 │   └── source_refs.md
 └── examples/
     └── h1-review-finance-admin.md
@@ -61,8 +62,15 @@ corus_facilitator_v0/
 
 ## v0 usage
 
-1. Paste meeting notes into `/extract-work-items`.
+1. Paste messy pre-meeting notes into `/extract-work-items`.
 2. Store the generated WorkItems in `state/work_items.md`.
 3. Use `/prep-meeting` before a meeting to decide what can close there.
 4. Use `/facilitate-meeting` during the meeting to keep the room oriented toward closure.
-5. Use `/record-closure` after the meeting to update closure memory.
+5. Use `/analyze-transcript` on a meeting transcript to determine what changed state.
+6. Use `/record-closure` after the meeting to update closure memory.
+
+## Command split
+
+`/extract-work-items` asks: What WorkItems exist?
+
+`/analyze-transcript` asks: What changed state in this meeting?
