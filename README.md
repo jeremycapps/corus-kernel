@@ -8,6 +8,40 @@ Corus Kernel derives context from minimal declared objects. Sources enter as raw
 source → interpret → artifact/contract → boundary → context
 ```
 
+## Translation grammar
+
+Corus uses two translation paths from an origin:
+
+```
+origin → how → what
+origin → why → whom
+```
+
+An **origin** may be a person, event, or outcome.
+
+The first path translates an origin into work:
+
+```
+origin → how → what
+```
+
+It asks how an origin becomes a concrete action, artifact, state, or decision.
+
+The second path translates an origin into meaning:
+
+```
+origin → why → whom
+```
+
+It asks why an origin matters and which role, stakeholder, accountable party, or consumer it matters to.
+
+In short:
+
+```
+origin → how → what   = execution path
+origin → why → whom   = meaning path
+```
+
 **Declared objects** are authored YAML: `source`, `artifact`, `contract`, `role`, `team`, `profile`, `boundary`, `moment`, `timpo`.
 
 **Derived objects** are computed by `derive`: `role_view`, `team_view`, `artifact_status`, `contract_status`, `context`, `context_state`, `trace`, `surface` (roadmap).
