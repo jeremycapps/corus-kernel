@@ -10,7 +10,7 @@ Closure surface types are intentionally limited:
 
 ```text
 async
-1:1
+one_on_one
 meeting_with_people
 ```
 
@@ -35,9 +35,9 @@ Default signals:
 - no live discussion needed
 - evidence can be sent, uploaded, or confirmed
 
-### 1:1
+### one_on_one
 
-Route to `1:1` when one named person’s context, judgment, clarification, or authority is required.
+Route to `one_on_one` when one named person’s context, judgment, clarification, or authority is required.
 
 Default signals:
 
@@ -82,7 +82,7 @@ routed_work_items:
 
 - Prefer the smallest closure surface that can close the WorkItem.
 - Do not route to a meeting with people when async is enough.
-- Do not route to a group meeting when a 1:1 is enough.
+- Do not route to a group meeting when one_on_one is enough.
 - Do not route an item anywhere unless the closure requirement is named.
 
 ## Keeper
