@@ -1,12 +1,18 @@
 # /corus:extract-work-items
 
-Use this command when the user provides meeting notes, a transcript, an email thread, a project update, or messy context and wants Corus to create WorkItems.
+Use this command when the user provides meeting notes, an email thread, a project update, or messy pre-meeting context and wants Corus to create WorkItems.
+
+For meeting transcripts where the user wants to know what happened during the meeting, use `/corus:analyze-transcript` instead.
 
 ## Purpose
 
 Turn vague topics and action items into closure-testable WorkItems.
 
 A WorkItem is not a generic task. A WorkItem is unresolved work that remains open until proof and/or authority requirements are satisfied.
+
+This command answers:
+
+> What WorkItems exist?
 
 ## Inputs
 
@@ -25,7 +31,7 @@ A WorkItem is not a generic task. A WorkItem is unresolved work that remains ope
    - authority: named person or role required to decide.
 6. Suggest a closure surface type:
    - `async`
-   - `1:1`
+   - `one_on_one`
    - `meeting_with_people`
 7. Return WorkItems in YAML.
 
@@ -47,7 +53,7 @@ work_items:
         all: []
         none: true
     attached_people: []
-    suggested_surface_type: async | 1:1 | meeting_with_people
+    suggested_surface_type: async | one_on_one | meeting_with_people
     source_refs: []
     first_seen: YYYY-MM-DD
     last_seen: YYYY-MM-DD
@@ -61,7 +67,7 @@ work_items:
 - Do not invent people. Use names present in the source or obvious roles from the context.
 - Do not over-specify org structure. Use the three closure surface types only.
 - Prefer `async` when proof alone can close.
-- Prefer `1:1` when one named person must clarify, judge, or decide.
+- Prefer `one_on_one` when one named person must clarify, judge, or decide.
 - Prefer `meeting_with_people` when multiple people must align, decide, or provide context.
 
 ## Facilitation question
