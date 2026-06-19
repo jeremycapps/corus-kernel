@@ -21,7 +21,7 @@ For each WorkItem ask:
 3. Is the required proof present?
 4. Is the required authority present?
 5. Can this close here?
-6. If not, should it move async, to a 1:1, or to another meeting with people?
+6. If not, should it move async, to one_on_one, or to another meeting with people?
 7. What outcome should be recorded?
 
 ## Allowed live outcomes
@@ -43,7 +43,7 @@ Say the quiet part when needed:
 - "This item cannot close here because proof is missing."
 - "This item cannot close here because authority is missing."
 - "This belongs async because it only needs proof."
-- "This belongs in a 1:1 because one named person needs to clarify or decide."
+- "This belongs in one_on_one because one named person needs to clarify or decide."
 - "This belongs in a meeting with people because multiple people need to align or decide."
 - "This looks closed. What proof or decision are we accepting?"
 - "This is carrying over. What changed since last time?"
@@ -60,7 +60,7 @@ facilitation_notes:
       authority_present: true | false
       outcome: closed | blocked | moved | carried_over | reopened | created
       reason:
-      next_surface_type: async | 1:1 | meeting_with_people | null
+      next_surface_type: async | one_on_one | meeting_with_people | null
       next_action:
 ```
 
