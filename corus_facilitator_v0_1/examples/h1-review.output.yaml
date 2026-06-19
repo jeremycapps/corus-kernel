@@ -1,0 +1,176 @@
+origins:
+  - id: origin.tiffany_banking_document
+    source_ref: examples/h1-review.input.txt
+    source_span: paragraph_1
+    evidence: >
+      Banking stuff, I just need to follow up with Tiffany. She's supposed to send an updated document.
+      She hasn't sent it yet. So I just need her to get us that. And as soon as we sign it and file it,
+      we should be good with the bank.
+
+  - id: origin.missing_invoices_terrell_ivy
+    source_ref: examples/h1-review.input.txt
+    source_span: paragraph_2
+    evidence: >
+      Jeremy, did you pay Terrell's invoice that came in? I don't see a bill from a Terrell.
+      Ivy had an invoice with us that was lingering. That's Ivy, but there was a second invoice.
+      We can figure this out later, Jeremy. I just want to make sure that those invoices don't get lost in the mail,
+      or so to speak.
+
+  - id: origin.h1_individual_review_framework
+    source_ref: examples/h1-review.input.txt
+    source_span: paragraph_3
+    evidence: >
+      The main thing I would like us to get some traction on today is thinking about the individual review piece.
+      What I would like is for people to fill these out. Then there is a place in Notion where on a set date,
+      they're all due. Everyone can then view them. People do their individual piece async, we all review async,
+      and then we come together to review as a group live.
+
+work_items:
+  - id: work.tiffany_banking_document
+    origin_id: origin.tiffany_banking_document
+    question: Has Tiffany sent the updated banking document so the bank setup can be signed and filed?
+    status: open
+
+  - id: work.missing_invoices_terrell_ivy
+    origin_id: origin.missing_invoices_terrell_ivy
+    question: Have Terrell's invoice and Ivy's second invoice been located and resolved?
+    status: open
+
+  - id: work.h1_individual_review_framework
+    origin_id: origin.h1_individual_review_framework
+    question: Has the H1 individual review framework been defined, shared, and scheduled?
+    status: open
+
+execution_projections:
+  - work_item_id: work.tiffany_banking_document
+    how: Follow up with Tiffany, receive the updated document, sign it, and file it.
+    what: Complete the banking setup document path.
+
+  - work_item_id: work.missing_invoices_terrell_ivy
+    how: Check invoice and payment records for Terrell's invoice and Ivy's second invoice.
+    what: Confirm whether the invoices exist and whether they have been paid or otherwise resolved.
+
+  - work_item_id: work.h1_individual_review_framework
+    how: Create the individual review form/process in Notion, set a due date, share it, and schedule async plus live review steps.
+    what: Define and launch the H1 individual review process.
+
+meaning_projections:
+  - work_item_id: work.tiffany_banking_document
+    why: Bank setup cannot finish until the updated document is received, signed, and filed.
+    whom:
+      - Tiffany
+      - Jeremy
+      - finance/admin owner
+      - organization relying on bank setup
+
+  - work_item_id: work.missing_invoices_terrell_ivy
+    why: Missing or unpaid invoices create payout and accounting risk and could leave contributors unpaid.
+    whom:
+      - Terrell
+      - Ivy
+      - Jeremy
+      - finance/admin owner
+
+  - work_item_id: work.h1_individual_review_framework
+    why: The organization needs H1 learnings, updated job descriptions, cross-org visibility, and H2 level-setting.
+    whom:
+      - members
+      - directors
+      - Jeremy
+      - organization as a whole
+
+requirements:
+  - work_item_id: work.tiffany_banking_document
+    proof:
+      any: []
+      all:
+        - updated document received
+        - document signed and filed
+      none: false
+    authority:
+      any: []
+      all: []
+      none: true
+
+  - work_item_id: work.missing_invoices_terrell_ivy
+    proof:
+      any: []
+      all:
+        - Terrell invoice located or confirmed absent
+        - Ivy second invoice located or confirmed absent
+        - payment or resolution status confirmed
+      none: false
+    authority:
+      any: []
+      all: []
+      none: true
+
+  - work_item_id: work.h1_individual_review_framework
+    proof:
+      any: []
+      all:
+        - review framework drafted
+        - Notion location created
+        - due date set
+        - live review plan scheduled
+      none: false
+    authority:
+      any: []
+      all: []
+      none: true
+
+surfaces:
+  - work_item_id: work.tiffany_banking_document
+    type: async
+
+  - work_item_id: work.missing_invoices_terrell_ivy
+    type: async
+
+  - work_item_id: work.h1_individual_review_framework
+    type: meeting_with_people
+
+outcomes:
+  - work_item_id: work.tiffany_banking_document
+    result: created
+    evidence:
+      - She's supposed to send an updated document. She hasn't sent it yet.
+
+  - work_item_id: work.missing_invoices_terrell_ivy
+    result: created
+    evidence:
+      - I don't see a bill from a Terrell.
+      - That's Ivy, but there was a second invoice.
+      - I just want to make sure that those invoices don't get lost.
+
+  - work_item_id: work.h1_individual_review_framework
+    result: created
+    evidence:
+      - The main thing I would like us to get some traction on today is thinking about the individual review piece.
+
+memory:
+  - work_item_id: work.tiffany_banking_document
+    first_seen: null
+    last_seen: null
+    outcomes:
+      - created
+    source_refs:
+      - examples/h1-review.input.txt
+    notes: Bank setup is blocked until Tiffany's updated document is received, signed, and filed.
+
+  - work_item_id: work.missing_invoices_terrell_ivy
+    first_seen: null
+    last_seen: null
+    outcomes:
+      - created
+    source_refs:
+      - examples/h1-review.input.txt
+    notes: Terrell and Ivy invoices are grouped because the source treats them as one missing-invoice risk.
+
+  - work_item_id: work.h1_individual_review_framework
+    first_seen: null
+    last_seen: null
+    outcomes:
+      - created
+    source_refs:
+      - examples/h1-review.input.txt
+    notes: The review process should preserve async input, shared visibility, and live group review.
