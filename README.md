@@ -42,6 +42,24 @@ origin → how → what   = execution path
 origin → why → whom   = meaning path
 ```
 
+## Layers
+
+```text
+Timpos remembers occurrences.
+Corus coordinates derived work state.
+Fasia contextualizes that state into usable surfaces.
+```
+
+The current facilitator work is treated as the first concrete candidate Fasia surface:
+
+```text
+Facilitator is a Fasia surface for closure.
+```
+
+See [Fasia Facilitator](docs/fasia_facilitator.md).
+
+## Objects
+
 **Declared objects** are authored YAML: `source`, `artifact`, `contract`, `role`, `team`, `profile`, `boundary`, `moment`, `timpo`.
 
 **Derived objects** are computed by `derive`: `role_view`, `team_view`, `artifact_status`, `contract_status`, `context`, `context_state`, `trace`, `surface` (roadmap).
@@ -68,8 +86,14 @@ The Neara RVO boundary fixture lives at `tests/fixtures/neara_rvo_boundary_v0/`.
 ## Documentation
 
 - [Architecture](docs/architecture.md) — declared vs derived, source roles, interpretation, context derivation
+- [Fasia Facilitator](docs/fasia_facilitator.md) — facilitator as the first concrete candidate Fasia surface
 - [Neara RVO fixture](docs/neara_rvo_fixture.md) — fixture walkthrough
 - [ROADMAP.md](ROADMAP.md) — post-v0 items (commits, resolution_state, focus, surfaces)
+
+## Prompt packages
+
+- `corus_facilitator_v0/` — markdown-first research scaffold for closure facilitation
+- `corus_facilitator_v0_1/` — YAML-first facilitator / candidate Fasia surface with object grammar, transition guardrails, and golden boundary cases
 
 ## Tests
 
