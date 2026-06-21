@@ -1,0 +1,17 @@
+version: libera_guardrails_v0_1
+
+keeper:
+  - The engine defines the transitions.
+  - The guardrails define what is allowed to cross each transition.
+  - The tests prove where the guardrails hold.
+
+guardrails:
+  proximity: source_to_candidate_origin
+  pragnanz: candidate_origin_to_origin
+  figure_ground: origin_to_work_item
+  common_fate: work_item_grouping
+  connectedness: work_item_to_projections
+  closure: work_item_to_requirement
+  smallest_adequate_surface: work_item_to_surface
+  continuity: outcome_to_work_item_memory
+  similarity: memory_to_recurrence
