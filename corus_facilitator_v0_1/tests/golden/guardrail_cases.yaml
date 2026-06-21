@@ -1,0 +1,239 @@
+version: corus_facilitator_guardrail_cases_v0_1
+
+purpose: >
+  Golden boundary cases for transition guardrails. These cases do not add new engine objects.
+  They pressure the prompt contract by testing whether source fragments become Origins, WorkItems,
+  Projections, Requirements, Surfaces, Outcomes, and Memory in bounded ways.
+
+checks:
+  - origin_count
+  - work_item_count
+  - origin_evidence_boundary
+  - work_item_question
+  - projection_presence
+  - requirement_minimality
+  - surface_type
+  - outcome_attachment
+  - no_origin_from_fyi
+  - no_merge_by_similarity_alone
+
+cases:
+  - id: proximity_candidate_with_complete_local_context
+    transition: source_to_candidate_origin
+    primary_guardrail: proximity
+    source: >
+      Tiffany is supposed to send the updated banking document.
+      She hasn't sent it yet.
+      Once we sign it and file it, we should be good with the bank.
+    expected:
+      origin_count: 1
+      work_item_count: 1
+      origin_evidence_contains:
+        - Tiffany is supposed to send the updated banking document.
+        - She hasn't sent it yet.
+        - Once we sign it and file it, we should be good with the bank.
+      work_item_question: Has Tiffany sent the updated banking document so the bank setup can be signed and filed?
+    reason: >
+      Nearby fragments include referents, work pressure, and resolution condition.
+
+  - id: pragnanz_rejects_underbounded_pronoun_span
+    transition: candidate_origin_to_origin
+    primary_guardrail: pragnanz
+    source: >
+      She hasn't sent it yet.
+    expected:
+      origin_count: 0
+      work_item_count: 0
+    reason: >
+      The span is underbounded. It cannot identify who "she" is or what "it" is, so it cannot justify the same WorkItem across execution and meaning.
+
+  - id: pragnanz_splits_overbounded_adjacent_work
+    transition: candidate_origin_to_origin
+    primary_guardrail: pragnanz
+    source: >
+      Tiffany still needs to send the updated banking document.
+      Once we sign and file it, we should be good with the bank.
+      Also, the H1 survey needs to be done by Friday for the members.
+    expected:
+      origin_count: 2
+      work_item_count: 2
+      work_item_questions:
+        - Has Tiffany sent the updated banking document so the bank setup can be signed and filed?
+        - Is the H1 survey done for the members by Friday?
+    reason: >
+      The candidate span is overbounded. The bank document and H1 survey require different resolutions.
+
+  - id: figure_ground_rejects_background_context
+    transition: origin_to_work_item
+    primary_guardrail: figure_ground
+    source: >
+      The bank office is usually slow this time of year.
+      Tiffany has been busy with other paperwork.
+    expected:
+      origin_count: 0
+      work_item_count: 0
+    reason: >
+      The source gives background context but no foreground closure-testable work.
+
+  - id: figure_ground_extracts_foreground_work
+    transition: origin_to_work_item
+    primary_guardrail: figure_ground
+    source: >
+      Banking stuff, I just need to follow up with Tiffany.
+      She's supposed to send an updated document. She hasn't sent it yet.
+      So I just need her to get us that. And as soon as we sign it and file it,
+      we should be good with the bank.
+    expected:
+      origin_count: 1
+      work_item_count: 1
+      work_item_question: Has Tiffany sent the updated banking document so the bank setup can be signed and filed?
+      background_not_separate_work_items:
+        - bank setup matters
+        - document must be signed and filed
+    reason: >
+      The foreground work is getting the updated document path resolved. Supporting context should not become separate WorkItems.
+
+  - id: common_fate_groups_missing_invoices
+    transition: work_item_grouping
+    primary_guardrail: common_fate
+    source: >
+      I don't see Terrell's invoice.
+      Ivy also had a second invoice lingering.
+      I just want to make sure those invoices don't get lost.
+    expected:
+      origin_count: 1
+      work_item_count: 1
+      work_item_question: Have Terrell's invoice and Ivy's second invoice been located and resolved?
+    reason: >
+      Both invoice fragments resolve through the same WorkItem: locate and resolve missing invoices.
+
+  - id: common_fate_splits_similar_but_different_work
+    transition: work_item_grouping
+    primary_guardrail: common_fate
+    source: >
+      I don't see Terrell's invoice.
+      Ivy needs to approve the H1 review form.
+    expected:
+      origin_count: 2
+      work_item_count: 2
+      work_item_questions:
+        - Has Terrell's invoice been located or resolved?
+        - Has Ivy approved the H1 review form?
+    reason: >
+      The fragments are adjacent and both admin-adjacent, but they do not resolve together.
+
+  - id: connectedness_prevents_invented_projection
+    transition: work_item_to_projections
+    primary_guardrail: connectedness
+    source: >
+      Tiffany hasn't sent the updated banking document yet.
+    expected:
+      origin_count: 1
+      work_item_count: 1
+      execution_projection:
+        what: Confirm whether Tiffany has sent the updated banking document.
+      meaning_projection:
+        why_supported: true
+      should_not_include:
+        - legal approval
+        - compliance packet
+        - board authorization
+    reason: >
+      The source supports a document-follow-up projection. It does not support extra legal, compliance, or board requirements.
+
+  - id: closure_derives_minimal_requirement
+    transition: work_item_to_requirement
+    primary_guardrail: closure
+    source: >
+      The review forms are not in Notion yet, and people need to fill them out before we meet live.
+    expected:
+      origin_count: 1
+      work_item_count: 1
+      work_item_question: Have the review forms been created in Notion for people to complete before the live meeting?
+      requirement_contains:
+        proof:
+          - review forms created in Notion
+          - review forms shared for async completion
+      requirement_should_not_include:
+        - full H2 strategy approved
+        - all job descriptions finalized
+    reason: >
+      Closure should define what completes this WorkItem, not expand into adjacent organizational goals.
+
+  - id: smallest_adequate_surface_routes_async
+    transition: work_item_to_surface
+    primary_guardrail: smallest_adequate_surface
+    source: >
+      Can someone check whether Tiffany sent the updated banking document?
+      If it's there, we just need to sign and file it.
+    expected:
+      surface_type: async
+    reason: >
+      Proof alone can resolve whether the document was sent.
+
+  - id: smallest_adequate_surface_routes_one_on_one
+    transition: work_item_to_surface
+    primary_guardrail: smallest_adequate_surface
+    source: >
+      Jeremy needs to confirm whether he owns the H1 review form before anyone else can move on it.
+    expected:
+      surface_type: one_on_one
+    reason: >
+      One named person must clarify ownership.
+
+  - id: smallest_adequate_surface_routes_meeting_with_people
+    transition: work_item_to_surface
+    primary_guardrail: smallest_adequate_surface
+    source: >
+      We need the directors to align on what the H1 review is for before we send it to members.
+    expected:
+      surface_type: meeting_with_people
+    reason: >
+      Multiple people must align before resolution.
+
+  - id: continuity_attaches_delayed_resolution
+    transition: outcome_to_work_item_memory
+    primary_guardrail: continuity
+    source: >
+      Ari: We need the H1 survey done by Friday for the members. Jeremy, what's the update?
+      Morgan: Before Jeremy answers, can we talk about the agenda?
+      Ari: Yes, but quickly.
+      Jeremy: It's done. I sent it this morning.
+    expected:
+      origin_count: 1
+      work_item_count: 1
+      work_item_question: Is the H1 survey done for the members by Friday?
+      outcome_result: resolved
+      outcome_evidence: It's done. I sent it this morning.
+    reason: >
+      The later answer continues the same WorkItem thread despite interruption.
+
+  - id: continuity_does_not_attach_unrelated_later_statement
+    transition: outcome_to_work_item_memory
+    primary_guardrail: continuity
+    source: >
+      Ari: We need the H1 survey done by Friday for the members. Jeremy, what's the update?
+      Morgan: Before Jeremy answers, can we talk about the agenda?
+      Ari: Yes, but quickly.
+      Jeremy: The banking document is done. I sent it this morning.
+    expected:
+      origin_count_minimum: 1
+      h1_survey_outcome_should_not_be: resolved
+      separate_work_or_evidence_needed: true
+    reason: >
+      The later statement mentions a different object. It should not resolve the H1 survey WorkItem.
+
+  - id: similarity_detects_recurrence_without_merging
+    transition: memory_to_recurrence
+    primary_guardrail: similarity
+    prior_memory: >
+      work.missing_invoices_may: Terrell and Ivy invoices were at risk of getting lost.
+    source: >
+      I don't see the June contractor invoice from Sam, and I don't want it to get lost.
+    expected:
+      origin_count: 1
+      work_item_count: 1
+      recurrence_pattern: missing_invoice_risk
+      should_not_merge_with_prior_work_item: true
+    reason: >
+      The new WorkItem is similar to prior missing invoice work, but it is not the same WorkItem.
