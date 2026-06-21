@@ -1,0 +1,152 @@
+version: fasia_facilitator_protocol_v0_1
+
+keeper:
+  - Origin anchors source reality.
+  - WorkItem anchors the unit of work.
+  - Projections preserve execution and meaning without bloating the WorkItem.
+  - Same Origin. Same WorkItem. Different projections.
+
+architecture:
+  chain:
+    - Origin
+    - WorkItem
+    - ExecutionProjection
+    - MeaningProjection
+    - Requirement
+    - Surface
+    - Outcome
+    - Memory
+  diagram: |
+    Origin
+    -> WorkItem
+        -> ExecutionProjection: how / what
+        -> MeaningProjection: why / whom
+    -> Requirement
+    -> Surface
+    -> Outcome
+    -> Memory
+
+objects:
+  origin:
+    definition: Minimum auditable source span from which a WorkItem and its projections can be derived.
+    required_fields:
+      id: string
+      source_ref: string
+      source_span: string | null
+      evidence: string
+    validity_tests:
+      - It is a direct source span or locator, not a summary.
+      - It is small enough to audit.
+      - It is large enough to derive one WorkItem.
+      - It can derive both ExecutionProjection and MeaningProjection.
+
+  work_item:
+    definition: Derived unit of work anchored to an Origin. It identifies the thing being resolved and carries current state.
+    required_fields:
+      id: string
+      origin_id: string
+      question: string
+      status: open | closed
+    validity_tests:
+      - It references exactly one Origin.
+      - It is phrased as a closure-testable question.
+      - It is not a broad topic or generic task title.
+
+  execution_projection:
+    definition: Execution reading of the WorkItem.
+    required_fields:
+      work_item_id: string
+      how: string
+      what: string
+    validity_tests:
+      - It references one WorkItem.
+      - It derives from the same Origin as the WorkItem.
+      - It answers how and what.
+
+  meaning_projection:
+    definition: Meaning reading of the same WorkItem.
+    required_fields:
+      work_item_id: string
+      why: string
+      whom: list[string]
+    validity_tests:
+      - It references one WorkItem.
+      - It derives from the same Origin as the WorkItem.
+      - It answers why and whom.
+
+  requirement:
+    definition: What must be true for the WorkItem to resolve.
+    required_fields:
+      work_item_id: string
+      proof:
+        any: list[string]
+        all: list[string]
+        none: boolean
+      authority:
+        any: list[string]
+        all: list[string]
+        none: boolean
+    validity_tests:
+      - It references one WorkItem.
+      - It names proof only when evidence would satisfy the WorkItem.
+      - It names authority only when a person or role must decide.
+
+  surface:
+    definition: Smallest adequate venue where resolution can happen.
+    required_fields:
+      work_item_id: string
+      type: async | one_on_one | meeting_with_people
+    validity_tests:
+      - It references one WorkItem.
+      - It uses only an allowed v0.1 surface type.
+      - It selects the smallest adequate venue.
+
+  outcome:
+    definition: State transition that happened to the WorkItem.
+    required_fields:
+      work_item_id: string
+      result: created | resolved | blocked | moved | carried_over | reopened
+      evidence: list[string]
+    validity_tests:
+      - It references one WorkItem.
+      - It names one allowed result.
+      - It includes evidence when the source supports a transition.
+
+  memory:
+    definition: Persistent continuity of the WorkItem across time.
+    required_fields:
+      work_item_id: string
+      first_seen: string | null
+      last_seen: string | null
+      outcomes: list[string]
+      source_refs: list[string]
+      notes: string | null
+    validity_tests:
+      - It references one WorkItem.
+      - It preserves continuity without summarizing the whole source.
+
+allowed_values:
+  work_item_status:
+    - open
+    - closed
+  surface_type:
+    - async
+    - one_on_one
+    - meeting_with_people
+  outcome_result:
+    - created
+    - resolved
+    - blocked
+    - moved
+    - carried_over
+    - reopened
+
+output_shape:
+  origins: []
+  work_items: []
+  execution_projections: []
+  meaning_projections: []
+  requirements: []
+  surfaces: []
+  outcomes: []
+  memory: []
