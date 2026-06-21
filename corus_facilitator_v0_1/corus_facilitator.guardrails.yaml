@@ -1,0 +1,265 @@
+version: corus_facilitator_guardrails_v0_1
+
+keeper:
+  - The engine defines the transitions.
+  - The guardrails define what is allowed to cross each transition.
+  - The tests prove where the guardrails hold.
+  - Guardrails define vocabulary; transitions apply it.
+
+guardrails:
+  proximity:
+    definition: Fragments near each other in the source are candidate parts of the same source span.
+    corus_definition: Use nearby fragments to propose Candidate Origins, but never to admit an Origin by itself.
+    primary_for:
+      - source_to_candidate_origin
+    secondary_for: []
+    protects_against:
+      - isolated_fragment_extraction
+      - missing_nearby_context
+      - missing_local_referents
+    failure_mode: Proximity can falsely merge adjacent but unrelated work.
+
+  pragnanz:
+    definition: Perception favors the simplest coherent whole the available parts can support.
+    corus_definition: The smallest source span that can justify the same WorkItem across both execution and meaning.
+    primary_for:
+      - candidate_origin_to_origin
+    secondary_for:
+      - work_item_grouping
+      - work_item_to_requirement
+    protects_against:
+      - underbounded_origin
+      - overbounded_origin
+      - topic_as_origin
+      - quote_without_force
+    failure_mode: If applied without projection sufficiency, it can over-shrink the span.
+
+  figure_ground:
+    definition: Perception separates the foreground figure from background context.
+    corus_definition: Separate foreground work pressure from supporting context inside an Origin.
+    primary_for:
+      - origin_to_work_item
+    secondary_for:
+      - candidate_origin_to_origin
+      - work_item_to_projections
+      - work_item_to_requirement
+    protects_against:
+      - background_as_work_item
+      - missed_foreground_work
+      - fake_tasks_from_context
+    failure_mode: If applied too aggressively, it can discard context needed for meaning.
+
+  common_fate:
+    definition: Parts moving toward the same direction are perceived as belonging together.
+    corus_definition: Group fragments into one WorkItem only when they resolve together; split them when they require different resolutions.
+    primary_for:
+      - work_item_grouping
+    secondary_for:
+      - candidate_origin_to_origin
+      - origin_to_work_item
+      - work_item_to_surface
+      - memory_to_recurrence
+    protects_against:
+      - false_merge
+      - false_split
+      - grouping_by_similarity_alone
+    failure_mode: Common fate can over-group if the shared resolution is vague.
+
+  connectedness:
+    definition: Parts explicitly linked by structure, reference, causality, or relation are perceived as belonging together.
+    corus_definition: Bind source fragments, WorkItems, projections, requirements, and outcomes only through source-supported relationships.
+    primary_for:
+      - work_item_to_projections
+    secondary_for:
+      - source_to_candidate_origin
+      - candidate_origin_to_origin
+      - origin_to_work_item
+      - work_item_grouping
+      - work_item_to_requirement
+      - work_item_to_surface
+      - outcome_to_work_item_memory
+      - memory_to_recurrence
+    protects_against:
+      - dangling_references
+      - invented_how
+      - invented_why
+      - invented_whom
+      - evidence_attached_to_wrong_thread
+    failure_mode: Surface-level connectors can mislead when the underlying WorkItems resolve separately.
+
+  closure:
+    definition: Perception completes incomplete shapes into coherent wholes.
+    corus_definition: Complete the implied WorkItem question or Requirement only within what the source can justify.
+    primary_for:
+      - work_item_to_requirement
+    secondary_for:
+      - origin_to_work_item
+      - work_item_to_projections
+      - work_item_to_surface
+      - outcome_to_work_item_memory
+    protects_against:
+      - vague_done_criteria
+      - inflated_requirements
+      - unsupported_completion
+      - marking_resolved_without_proof_or_authority
+    failure_mode: Closure is the highest hallucination-risk guardrail if unconstrained by source evidence.
+
+  continuity:
+    definition: Perception preserves a continuous thread across interruption or distance.
+    corus_definition: Attach later evidence or state changes to an existing WorkItem when they continue the same thread.
+    primary_for:
+      - outcome_to_work_item_memory
+    secondary_for:
+      - memory_to_recurrence
+    protects_against:
+      - lost_closures
+      - duplicate_work_items
+      - wrong_thread_attachment
+      - treating_resolution_evidence_as_new_work
+    failure_mode: Continuity can falsely attach later evidence when identity markers are weak.
+
+  similarity:
+    definition: Similar-looking parts are perceived as related.
+    corus_definition: Use similarity to detect candidate related fragments and recurring patterns, not to prove sameness.
+    primary_for:
+      - memory_to_recurrence
+    secondary_for:
+      - source_to_candidate_origin
+      - work_item_grouping
+    protects_against:
+      - missing_recurring_patterns
+      - missing_related_candidate_fragments
+    failure_mode: Similarity can falsely merge distinct WorkItems that sound alike.
+
+  smallest_adequate_surface:
+    definition: Route resolution to the least costly venue that can actually resolve the WorkItem.
+    corus_definition: Use async for proof, one_on_one for one named person, and meeting_with_people for multi-person alignment or decision.
+    primary_for:
+      - work_item_to_surface
+    secondary_for: []
+    protects_against:
+      - over_meeting
+      - under_routing
+      - routing_authority_decisions_to_async
+      - routing_multi_person_alignment_to_one_on_one
+    failure_mode: Over-optimizing for small surfaces can under-route alignment work.
+
+transitions:
+  source_to_candidate_origin:
+    description: Initial scan from raw source material to possible source spans.
+    primary_guardrail: proximity
+    secondary_guardrails:
+      - similarity
+      - connectedness
+    rule: Nearby fragments may be considered together as candidate spans, but proximity does not admit an Origin.
+    prevents:
+      - isolated fragments without local context
+      - missing nearby referents
+      - missing candidate clusters
+
+  candidate_origin_to_origin:
+    description: Admission of a candidate source span as an Origin.
+    primary_guardrail: pragnanz
+    secondary_guardrails:
+      - connectedness
+      - figure_ground
+      - common_fate
+    rule: Admit the smallest source span that can justify the same WorkItem across both execution and meaning.
+    prevents:
+      - underbounded Origins
+      - overbounded Origins
+      - topic-as-Origin
+      - quote-without-force
+
+  origin_to_work_item:
+    description: Derivation of the foreground WorkItem from an admitted Origin.
+    primary_guardrail: figure_ground
+    secondary_guardrails:
+      - closure
+      - connectedness
+      - common_fate
+    rule: Extract foreground work from the Origin without turning background context into separate WorkItems.
+    prevents:
+      - background context becoming fake work
+      - missed foreground unresolved work
+      - too many tasks from one source event
+
+  work_item_grouping:
+    description: Decision to group or split possible WorkItems.
+    primary_guardrail: common_fate
+    secondary_guardrails:
+      - similarity
+      - connectedness
+      - pragnanz
+    rule: Group fragments into one WorkItem only when they resolve together; split them when they require different resolutions.
+    prevents:
+      - false merging
+      - false splitting
+      - grouping by similarity alone
+
+  work_item_to_projections:
+    description: Derivation of execution and meaning projections from the same WorkItem.
+    primary_guardrail: connectedness
+    secondary_guardrails:
+      - closure
+      - figure_ground
+    rule: Bind execution and meaning projections only to relationships supported by the source.
+    prevents:
+      - invented how
+      - invented what
+      - invented why
+      - invented whom
+      - meaning detached from source
+
+  work_item_to_requirement:
+    description: Derivation of resolution requirements from a WorkItem.
+    primary_guardrail: closure
+    secondary_guardrails:
+      - connectedness
+      - pragnanz
+    rule: Define what would count as complete for the WorkItem, without inflating beyond source support.
+    prevents:
+      - vague done criteria
+      - inflated requirements
+      - marking closed without proof or authority
+
+  work_item_to_surface:
+    description: Routing a WorkItem to the smallest adequate resolution venue.
+    primary_guardrail: smallest_adequate_surface
+    secondary_guardrails:
+      - common_fate
+      - closure
+      - connectedness
+    rule: Route to the smallest adequate venue: async, one_on_one, or meeting_with_people.
+    prevents:
+      - over-meeting
+      - under-routing
+      - routing authority decisions to async
+      - routing multi-person alignment to one_on_one
+
+  outcome_to_work_item_memory:
+    description: Attachment of later evidence or state changes to existing WorkItems and Memory.
+    primary_guardrail: continuity
+    secondary_guardrails:
+      - connectedness
+      - closure
+      - similarity
+    rule: Attach later evidence to an existing WorkItem when it continues the same thread.
+    prevents:
+      - lost closures
+      - duplicate WorkItems
+      - evidence attached to the wrong thread
+      - creating new work from resolution evidence
+
+  memory_to_recurrence:
+    description: Comparison of current WorkItems against prior Memory for recurring patterns.
+    primary_guardrail: similarity
+    secondary_guardrails:
+      - continuity
+      - common_fate
+      - connectedness
+    rule: Use similarity to detect recurring patterns, not to prove sameness.
+    prevents:
+      - merging similar but distinct work
+      - missing repeated operational patterns
+      - treating recurrence as identity
