@@ -50,10 +50,21 @@ Corus coordinates derived work state.
 Fasia contextualizes that state into usable surfaces.
 ```
 
-The current facilitator work is treated as the first concrete candidate Fasia surface:
+The active facilitator surface now lives under Fasia:
 
 ```text
-Facilitator is a Fasia surface for closure.
+fasia/facilitator/
+├── protocol/
+└── delivery/
+    └── claude/
+```
+
+Keeper:
+
+```text
+Facilitator is the Fasia surface.
+Protocol is the agent-agnostic format.
+Claude is one delivery implementation.
 ```
 
 See [Fasia Facilitator](docs/fasia_facilitator.md).
@@ -90,10 +101,15 @@ The Neara RVO boundary fixture lives at `tests/fixtures/neara_rvo_boundary_v0/`.
 - [Neara RVO fixture](docs/neara_rvo_fixture.md) — fixture walkthrough
 - [ROADMAP.md](ROADMAP.md) — post-v0 items (commits, resolution_state, focus, surfaces)
 
-## Prompt packages
+## Fasia surfaces
 
-- `corus_facilitator_v0/` — markdown-first research scaffold for closure facilitation
-- `corus_facilitator_v0_1/` — YAML-first facilitator / candidate Fasia surface with object grammar, transition guardrails, and golden boundary cases
+- `fasia/facilitator/protocol/` — agent-agnostic facilitator protocol: prompt, schema, guardrails, examples, golden boundary cases
+- `fasia/facilitator/delivery/claude/` — Claude-specific delivery package for the facilitator surface
+
+## Archived discovery scaffolds
+
+- `corus_facilitator_v0/` — markdown-first discovery scaffold, migrated to `fasia/facilitator/delivery/claude/`
+- `corus_facilitator_v0_1/` — YAML-first discovery scaffold, migrated to `fasia/facilitator/protocol/`
 
 ## Tests
 
