@@ -15,7 +15,13 @@ Prompts tell the model what to do.
 Object shapes tell the model what counts.
 ```
 
-Use the schema as the admissibility boundary. Do not output objects that do not satisfy the schema.
+Use `corus_facilitator.schema.yaml` as the output grammar.
+
+Use `corus_facilitator.guardrails.yaml` as the transition policy.
+
+The schema defines admissible object shape. The guardrails define what is allowed to cross each transition.
+
+Do not output objects that do not satisfy the schema.
 
 ## Architecture
 
@@ -28,6 +34,65 @@ Origin
 → Surface
 → Outcome
 → Memory
+```
+
+## Transition guardrail policy
+
+Use one primary guardrail per transition.
+
+Secondary guardrails are only used to catch common failure modes.
+
+Do not apply all principles equally at every step.
+
+```text
+Proximity proposes Candidate Origins.
+Prägnanz admits Origins.
+Figure-ground extracts WorkItems.
+Common fate groups or splits WorkItems.
+Connectedness binds projections.
+Closure defines Requirements.
+Smallest adequate surface routes Surfaces.
+Continuity attaches Outcomes.
+Similarity informs Memory recurrence.
+```
+
+Transition policy:
+
+```text
+Source → Candidate Origin:
+  primary guardrail = Proximity
+
+Candidate Origin → Origin:
+  primary guardrail = Prägnanz
+
+Origin → WorkItem:
+  primary guardrail = Figure-ground
+
+WorkItem grouping:
+  primary guardrail = Common fate
+
+WorkItem → ExecutionProjection / MeaningProjection:
+  primary guardrail = Connectedness
+
+WorkItem → Requirement:
+  primary guardrail = Closure
+
+WorkItem → Surface:
+  primary guardrail = Smallest adequate surface
+
+Outcome → WorkItem / Memory:
+  primary guardrail = Continuity
+
+Memory → recurrence:
+  primary guardrail = Similarity
+```
+
+Implementation rule:
+
+```text
+The engine defines the transitions.
+The guardrails define what is allowed to cross each transition.
+The tests prove where the guardrails hold.
 ```
 
 ## Core task
@@ -53,16 +118,16 @@ why / whom
 ## Procedure
 
 1. Read the source material.
-2. Capture only Origins that contain enough situated force to derive one WorkItem and both projections.
-3. For each Origin, derive exactly one WorkItem unless the source span clearly contains multiple separable units of work.
-4. For each WorkItem, derive:
-   - ExecutionProjection
-   - MeaningProjection
-   - Requirement
-   - Surface
-   - Outcome when the source shows a state transition
-   - Memory update when persistence is needed
-5. Return YAML only.
+2. Use Proximity to identify nearby fragments that may form Candidate Origins.
+3. Use Prägnanz to admit only Origins that are the smallest source span able to justify the same WorkItem across both execution and meaning.
+4. Use Figure-ground to derive foreground WorkItems from admitted Origins.
+5. Use Common fate to group or split possible WorkItems by shared resolution.
+6. Use Connectedness to derive source-supported ExecutionProjection and MeaningProjection.
+7. Use Closure to derive minimal Requirements.
+8. Use Smallest adequate surface to route WorkItems.
+9. Use Continuity to attach later Outcomes to existing WorkItems and Memory.
+10. Use Similarity to identify recurrence in Memory without merging distinct WorkItems.
+11. Return YAML only.
 
 ## Origin capture rules
 
@@ -83,6 +148,19 @@ Do not capture Origins from:
 - summaries that are not source spans
 
 The Origin should preserve the source excerpt. It should not carry derived interpretation.
+
+Prägnanz rule:
+
+```text
+Admit the smallest source span that can justify the same WorkItem across both execution and meaning.
+```
+
+Reject Origins that are:
+
+- underbounded: too small to resolve referents or support projections
+- overbounded: include unrelated work or more context than necessary
+- topic-only: name a discussion area without work pressure
+- quote-only: preserve a quote that cannot justify a WorkItem
 
 ## WorkItem rules
 
@@ -108,6 +186,18 @@ The question should name what must be resolved.
 Use `open` when the source does not show accepted resolution.
 Use `closed` when the source shows accepted resolution.
 
+Figure-ground rule:
+
+```text
+Extract the foreground work from the Origin without turning background context into separate WorkItems.
+```
+
+Common fate rule:
+
+```text
+Group fragments into one WorkItem only when they resolve together; split them when they require different resolutions.
+```
+
 ## Projection rules
 
 Both projections must derive from the same Origin and same WorkItem.
@@ -127,6 +217,14 @@ Whom does this matter to?
 ```
 
 Do not put projections inside WorkItem. WorkItem anchors the unit. Projections preserve the path-specific readings.
+
+Connectedness rule:
+
+```text
+Bind execution and meaning projections only to relationships supported by the source.
+```
+
+Do not invent how, what, why, or whom beyond what the Origin can support.
 
 ## Requirement rules
 
@@ -150,6 +248,12 @@ none
 
 Do not invent proof or authority.
 Use names present in the source or obvious roles only when the source clearly implies them.
+
+Closure rule:
+
+```text
+Define what would count as complete for the WorkItem, without inflating beyond source support.
+```
 
 ## Surface rules
 
@@ -178,6 +282,12 @@ Do not create surface types such as:
 
 Those are labels, not surface types.
 
+Smallest adequate surface rule:
+
+```text
+Route to the least costly venue that can actually resolve the WorkItem.
+```
+
 ## Outcome rules
 
 Outcome records what happened to the WorkItem.
@@ -197,6 +307,14 @@ Do not mark `resolved` unless proof or authority was explicitly accepted, or the
 
 If proof or authority is missing, use `blocked` or `carried_over`.
 
+Continuity rule:
+
+```text
+Attach later evidence to an existing WorkItem when it continues the same thread.
+```
+
+Do not create a new WorkItem from resolution evidence unless the evidence also creates new work.
+
 ## Memory rules
 
 Memory preserves continuity across time.
@@ -211,6 +329,14 @@ Use Memory when the source indicates:
 - source references needed for future audit
 
 Memory should be concise. It is not meeting notes.
+
+Similarity rule:
+
+```text
+Use similarity to detect recurring patterns, not to prove sameness.
+```
+
+Do not merge similar but distinct WorkItems.
 
 ## Output rules
 
@@ -243,4 +369,10 @@ Projections preserve execution and meaning without bloating the WorkItem.
 
 ```text
 Same Origin. Same WorkItem. Different projections.
+```
+
+```text
+The engine defines the transitions.
+The guardrails define what is allowed to cross each transition.
+The tests prove where the guardrails hold.
 ```
