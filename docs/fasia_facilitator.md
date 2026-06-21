@@ -8,8 +8,9 @@ It is a Fasia surface for closure.
 ```
 
 ```text
-Fasia is where Corus state becomes situated enough for someone to act.
-Facilitator is the meeting-closure face of Fasia.
+Facilitator is the Fasia surface.
+Protocol is the agent-agnostic format.
+Claude is one delivery implementation.
 ```
 
 ## Layer distinction
@@ -20,7 +21,7 @@ Corus coordinates derived work state.
 Fasia contextualizes that state into usable surfaces.
 ```
 
-The facilitator work started as a meeting-closure package, but the v0.1 object grammar and transition guardrails reveal a broader layer boundary.
+The facilitator work started as a meeting-closure package, but the object grammar and transition guardrails reveal a broader layer boundary.
 
 The facilitator does not merely extract tasks from meetings. It binds source-grounded Corus state into a usable closure surface.
 
@@ -36,6 +37,31 @@ Source / Timpos
     Memory
 → Fasia surface
     Facilitator
+        protocol
+        delivery/claude
+```
+
+## Active implementation
+
+```text
+fasia/facilitator/
+├── README.md
+├── protocol/
+│   ├── README.md
+│   ├── facilitator.prompt.md
+│   ├── facilitator.schema.yaml
+│   ├── facilitator.guardrails.yaml
+│   ├── docs/
+│   ├── examples/
+│   └── tests/
+└── delivery/
+    └── claude/
+        ├── README.md
+        ├── SKILL.md
+        ├── commands/
+        ├── skills/
+        ├── state/
+        └── examples/
 ```
 
 ## Why facilitator belongs under Fasia
@@ -58,26 +84,31 @@ Those are contextualization decisions.
 
 They are not only coordination decisions.
 
-## Current implementation
+## Protocol
 
-The current implementation remains in:
+The protocol is agent-agnostic.
 
-```text
-corus_facilitator_v0_1/
-```
-
-This directory is intentionally not renamed yet.
-
-Reason:
+It contains:
 
 ```text
-Facilitator is the concrete surface being tested.
-Fasia is the layer it may belong to.
+object grammar
+prompt behavior
+transition guardrails
+examples
+golden boundary tests
 ```
 
-Renaming too early would hide the path of discovery.
+The protocol should be usable across Claude, ChatGPT, Codex-style agents, custom API workers, UI flows, and other agentic delivery forms.
 
-## Architecture in v0.1
+## Claude delivery
+
+Claude delivery is one implementation of the facilitator surface.
+
+It can provide commands, skill modules, workflow guidance, and human-facing operating discipline.
+
+It should not redefine the protocol objects.
+
+## Architecture
 
 ```text
 Origin
@@ -90,7 +121,7 @@ Origin
 → Memory
 ```
 
-The key correction from v0 to v0.1 is:
+The key correction from the discovery scaffolds is:
 
 ```text
 Origin captures.
@@ -104,8 +135,6 @@ Memory preserves continuity.
 ```
 
 ## Guardrail layer
-
-The facilitator v0.1 package adds transition guardrails:
 
 ```text
 The engine defines the transitions.
