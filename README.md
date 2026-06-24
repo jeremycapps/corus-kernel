@@ -1,11 +1,11 @@
 # Corus Kernel v0
 
-Corus Kernel derives context from minimal declared objects. Sources enter as raw documents; interpretation produces reviewable candidates; admitted artifacts and contracts feed boundary selection; moments record occurrence; context is derived deterministically.
+Corus Kernel derives context from minimal declared objects. Sources enter as raw documents; interpretation produces reviewable candidates; admitted artifacts and contracts feed context coordination; moments record occurrence; context is derived deterministically.
 
 ## Model
 
 ```
-source → interpret → artifact/contract → boundary → context
+source → interpret → artifact/contract → context
 ```
 
 ## Translation grammar
@@ -45,29 +45,37 @@ origin → why → whom   = meaning path
 ## Layers
 
 ```text
-Timpos remembers occurrences.
-Corus coordinates derived work state.
-Fasia contextualizes that state into usable surfaces.
+Libera proposes.
+Corus coordinates.
+Facia prioritizes.
+Timpos remembers.
 ```
 
-The active facilitator surface now lives under Fasia:
+Libera is the intake and proposal layer. It owns what was previously called the facilitator protocol.
 
 ```text
-fasia/facilitator/
+libera/
 ├── protocol/
 └── delivery/
     └── claude/
 ```
 
+Facia is the surface and priority layer.
+
+```text
+facia/
+```
+
 Keeper:
 
 ```text
-Facilitator is the Fasia surface.
-Protocol is the agent-agnostic format.
-Claude is one delivery implementation.
+Libera proposes candidate context from source material.
+Corus coordinates admitted context state.
+Facia renders surfaces, priorities, why, claims, and next actions.
+Timpos records occurrences and state transitions.
 ```
 
-See [Fasia Facilitator](docs/fasia_facilitator.md).
+See [Libera](docs/libera.md) and [Facia](docs/facia.md).
 
 ## Objects
 
@@ -97,19 +105,20 @@ The Neara RVO boundary fixture lives at `tests/fixtures/neara_rvo_boundary_v0/`.
 ## Documentation
 
 - [Architecture](docs/architecture.md) — declared vs derived, source roles, interpretation, context derivation
-- [Fasia Facilitator](docs/fasia_facilitator.md) — facilitator as the first concrete candidate Fasia surface
+- [Libera](docs/libera.md) — intake and proposal layer, formerly facilitator
+- [Facia](docs/facia.md) — surfaces, priorities, why, claims, and next actions
 - [Neara RVO fixture](docs/neara_rvo_fixture.md) — fixture walkthrough
 - [ROADMAP.md](ROADMAP.md) — post-v0 items (commits, resolution_state, focus, surfaces)
 
-## Fasia surfaces
+## Libera protocol
 
-- `fasia/facilitator/protocol/` — agent-agnostic facilitator protocol: prompt, schema, guardrails, examples, golden boundary cases
-- `fasia/facilitator/delivery/claude/` — Claude-specific delivery package for the facilitator surface
+- `libera/protocol/` — agent-agnostic Libera protocol: prompt, schema, guardrails, examples, golden boundary cases
+- `libera/delivery/claude/` — Claude-specific delivery package for Libera
 
 ## Archived discovery scaffolds
 
-- `corus_facilitator_v0/` — markdown-first discovery scaffold, migrated to `fasia/facilitator/delivery/claude/`
-- `corus_facilitator_v0_1/` — YAML-first discovery scaffold, migrated to `fasia/facilitator/protocol/`
+- `corus_facilitator_v0/` — archived markdown-first discovery scaffold, pre-Libera naming
+- `corus_facilitator_v0_1/` — archived YAML-first discovery scaffold, pre-Libera naming
 
 ## Tests
 

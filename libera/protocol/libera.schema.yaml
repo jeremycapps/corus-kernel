@@ -1,0 +1,29 @@
+version: libera_protocol_v0_1
+
+keeper:
+  - Origin anchors source reality.
+  - WorkItem anchors the unit of work.
+  - Same Origin. Same WorkItem. Different projections.
+
+architecture:
+  chain:
+    - Source
+    - CandidateOrigin
+    - Origin
+    - WorkItem
+    - ExecutionProjection
+    - MeaningProjection
+    - Requirement
+    - Surface
+    - Outcome
+    - Memory
+
+output_shape:
+  origins: []
+  work_items: []
+  execution_projections: []
+  meaning_projections: []
+  requirements: []
+  surfaces: []
+  outcomes: []
+  memory: []
