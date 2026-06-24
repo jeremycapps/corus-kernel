@@ -1,0 +1,28 @@
+moments:
+  - id: moment.001
+    workstream: workstream.client_homepage_update
+    path: tasks/update-hero-layout/status
+    value: in_progress
+    timpo: timpo.001
+    previous: null
+
+  - id: moment.002
+    workstream: workstream.client_homepage_update
+    path: meetings/client-review/status
+    value: scheduled
+    timpo: timpo.002
+    previous: null
+
+  - id: moment.003
+    workstream: workstream.client_homepage_update
+    path: tasks/update-hero-layout/status
+    value: ready_for_client_review
+    timpo: timpo.003
+    previous: moment.001
+
+  - id: moment.004
+    workstream: workstream.client_homepage_update
+    path: tasks/update-hero-layout/status
+    value: client_feedback_requested
+    timpo: timpo.004
+    previous: moment.003
