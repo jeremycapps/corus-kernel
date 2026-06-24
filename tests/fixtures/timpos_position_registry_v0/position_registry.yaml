@@ -1,0 +1,134 @@
+position_registry:
+  version: 0.1
+
+  defaults:
+    id_hash: "sha256:position:v1:{type}:{canonical_locator}"
+    retrieval_statuses:
+      - found
+      - not_found
+      - permission_denied
+      - connector_missing
+      - version_unavailable
+
+  position_types:
+    notion.page_property:
+      locator_schema:
+        workspace_id: string
+        page_id: string
+        property_name: string
+      canonical_uri_template: "notion://workspace/{workspace_id}/page/{page_id}#property={property_name}"
+      resolvers:
+        - protocol: mcp
+          server: notion
+          tool: pages.retrieve_property
+          argument_map:
+            page_id: locator.page_id
+            property_name: locator.property_name
+        - protocol: api
+          service: notion
+          operation: pages.properties.retrieve
+          argument_map:
+            page_id: locator.page_id
+            property_name: locator.property_name
+
+    local_file.range:
+      locator_schema:
+        path: string
+        start_line: integer
+        end_line: integer
+      canonical_uri_template: "file://{path}#L{start_line}-L{end_line}"
+      resolvers:
+        - protocol: local
+          operation: file.read_range
+          argument_map:
+            path: locator.path
+            start_line: locator.start_line
+            end_line: locator.end_line
+
+    s3.versioned_object:
+      locator_schema:
+        bucket: string
+        key: string
+        version_id: string
+        region: string | null
+      canonical_uri_template: "s3://{bucket}/{key}?versionId={version_id}"
+      resolvers:
+        - protocol: api
+          service: aws_s3
+          operation: get_object
+          argument_map:
+            bucket: locator.bucket
+            key: locator.key
+            version_id: locator.version_id
+            region: locator.region
+        - protocol: mcp
+          server: aws_s3
+          tool: get_versioned_object
+          argument_map:
+            bucket: locator.bucket
+            key: locator.key
+            version_id: locator.version_id
+
+    jira.issue_field:
+      locator_schema:
+        site: string
+        issue_key: string
+        field_name: string
+      canonical_uri_template: "jira://{site}/issue/{issue_key}#field={field_name}"
+      resolvers:
+        - protocol: mcp
+          server: jira
+          tool: issues.retrieve_field
+          argument_map:
+            issue_key: locator.issue_key
+            field_name: locator.field_name
+        - protocol: api
+          service: jira
+          operation: issue.get_field
+          argument_map:
+            site: locator.site
+            issue_key: locator.issue_key
+            field_name: locator.field_name
+
+    monday.column_value:
+      locator_schema:
+        account_slug: string
+        board_id: string
+        item_id: string
+        column_id: string
+      canonical_uri_template: "monday://{account_slug}/board/{board_id}/item/{item_id}#column={column_id}"
+      resolvers:
+        - protocol: mcp
+          server: monday
+          tool: items.retrieve_column_value
+          argument_map:
+            board_id: locator.board_id
+            item_id: locator.item_id
+            column_id: locator.column_id
+        - protocol: api
+          service: monday
+          operation: column_value.get
+          argument_map:
+            board_id: locator.board_id
+            item_id: locator.item_id
+            column_id: locator.column_id
+
+    asana.task_field:
+      locator_schema:
+        workspace_gid: string
+        task_gid: string
+        field_name: string
+      canonical_uri_template: "asana://workspace/{workspace_gid}/task/{task_gid}#field={field_name}"
+      resolvers:
+        - protocol: mcp
+          server: asana
+          tool: tasks.retrieve_field
+          argument_map:
+            task_gid: locator.task_gid
+            field_name: locator.field_name
+        - protocol: api
+          service: asana
+          operation: task.get_field
+          argument_map:
+            task_gid: locator.task_gid
+            field_name: locator.field_name
