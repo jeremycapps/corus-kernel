@@ -1,0 +1,44 @@
+positions:
+  - id: pos.hero_status
+    type: notion.page_property
+    locator:
+      workspace_id: acme
+      page_id: page_update_hero_layout
+      property_name: Status
+
+  - id: pos.client_review_notes
+    type: local_file.range
+    locator:
+      path: tests/fixtures/timpos_position_registry_v0/sources/client-review.md
+      start_line: 1
+      end_line: 12
+
+  - id: pos.customer_gis_export
+    type: s3.versioned_object
+    locator:
+      bucket: acme-customer-exports
+      key: gis/client-homepage/export.json
+      version_id: "3LgexampleVersion"
+      region: us-east-1
+
+  - id: pos.jira_hero_status
+    type: jira.issue_field
+    locator:
+      site: acme.atlassian.net
+      issue_key: DESIGN-482
+      field_name: status
+
+  - id: pos.monday_hero_status
+    type: monday.column_value
+    locator:
+      account_slug: acme
+      board_id: "123456"
+      item_id: "7891011"
+      column_id: status
+
+  - id: pos.asana_hero_completed
+    type: asana.task_field
+    locator:
+      workspace_gid: "1200000000000000"
+      task_gid: "1209000000000000"
+      field_name: completed
