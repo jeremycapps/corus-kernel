@@ -1,0 +1,16 @@
+timpos:
+  - id: timpo.001
+    t: 2026-06-24T15:42:00-04:00
+    p: pos.hero_status
+
+  - id: timpo.002
+    t: 2026-06-24T16:05:00-04:00
+    p: pos.client_review_notes
+
+  - id: timpo.003
+    t: 2026-06-24T16:30:00-04:00
+    p: pos.jira_hero_status
+
+  - id: timpo.004
+    t: 2026-06-25T09:18:00-04:00
+    p: pos.hero_status
