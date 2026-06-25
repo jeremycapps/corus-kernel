@@ -1,0 +1,28 @@
+moments:
+  - id: moment.001
+    workstream: design_systems_bug_intake
+    path: boundary/request
+    value: reported
+    timpo: timpo.001
+    previous: null
+
+  - id: moment.002
+    workstream: design_systems_bug_intake
+    path: movement/task
+    value: todo
+    timpo: timpo.002
+    previous: null
+
+  - id: moment.003
+    workstream: design_systems_bug_intake
+    path: governance/review
+    value: scheduled
+    timpo: timpo.003
+    previous: null
+
+  - id: moment.004
+    workstream: design_systems_bug_intake
+    path: movement/task
+    value: in_progress
+    timpo: timpo.002
+    previous: moment.002
