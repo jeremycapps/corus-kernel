@@ -1,0 +1,59 @@
+schema: corus.coordination_state
+version: 1.0.0
+status: v1
+
+summary: Defines derived coordination state emitted by Corus.
+
+required_root_key: coordination_state
+
+coordination_state:
+  required:
+    - workflow
+    - current
+  fields:
+    workflow:
+      type: string
+      required: true
+      description: Workstream id.
+    subject:
+      type:
+        - string
+        - null
+      required: false
+      description: Optional subject instance.
+    objective:
+      type:
+        - string
+        - null
+      required: false
+      description: Objective id.
+    current:
+      type: map
+      required: true
+      description: Current replayed values by Libera path.
+    missing:
+      type: list
+      required: false
+      description: Required paths not present in current state.
+    blocked:
+      type: list
+      required: false
+      description: Blockers derived from current and missing state.
+    ready:
+      type: list
+      required: false
+      description: Paths or roles ready for next coordination step.
+    next_actions:
+      type: list
+      required: false
+      description: Suggested next actions derived from state.
+    role_attention:
+      type: map
+      required: false
+      description: Owner, executor, and consumer attention state.
+
+rules:
+  - Coordination state is derived, not authored.
+  - Coordination state is computed from replayed Timpos moments and Corus reducers.
+  - Coordination state may reference Libera paths.
+  - Coordination state does not render final faces or surfaces.
