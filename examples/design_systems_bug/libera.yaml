@@ -1,0 +1,89 @@
+libera:
+  version: 1.0.0
+  workflow: design_systems_bug_intake
+
+  paths:
+    boundary:
+      execution:
+        request:
+          path: boundary/request
+          allowed_values:
+            - missing
+            - reported
+        deliverable:
+          path: boundary/deliverable
+          allowed_values:
+            - missing
+            - delivered
+
+      governance:
+        approval:
+          path: governance/approval
+          allowed_values:
+            - missing
+            - requested
+            - approved
+        acceptance:
+          path: governance/acceptance
+          allowed_values:
+            - missing
+            - accepted
+
+    movement:
+      execution:
+        task:
+          path: movement/task
+          allowed_values:
+            - missing
+            - todo
+            - in_progress
+            - done
+        change:
+          path: movement/change
+          allowed_values:
+            - missing
+            - proposed
+            - accepted
+
+      governance:
+        review:
+          path: governance/review
+          allowed_values:
+            - missing
+            - scheduled
+            - completed
+        decision:
+          path: governance/decision
+          allowed_values:
+            - missing
+            - pending
+            - decided
+
+    exception:
+      execution:
+        issue:
+          path: exception/issue
+          allowed_values:
+            - missing
+            - open
+            - resolved
+        incident:
+          path: exception/incident
+          allowed_values:
+            - missing
+            - open
+            - escalated
+
+      governance:
+        validation:
+          path: exception/validation
+          allowed_values:
+            - missing
+            - pending
+            - validated
+        escalation:
+          path: exception/escalation
+          allowed_values:
+            - missing
+            - requested
+            - escalated
