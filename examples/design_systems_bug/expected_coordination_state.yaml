@@ -1,0 +1,41 @@
+coordination_state:
+  workflow: design_systems_bug_intake
+  objective: objective.design_systems_bug_intake.validated_fix
+
+  current:
+    boundary/request: reported
+    movement/task: in_progress
+    governance/review: scheduled
+
+  missing:
+    - exception/validation
+
+  blocked:
+    - id: blocker.validation_missing
+      reason: Fix cannot close until validation is present.
+      path: exception/validation
+
+  ready:
+    - governance/review
+
+  next_actions:
+    - role: executor
+      action: provide_validation_evidence
+      reason: Validation is required before this bug can be accepted or closed.
+      blocked_by:
+        - exception/validation
+      unblocks:
+        - governance/acceptance
+      evidence_required: true
+      authority_required: false
+
+  role_attention:
+    owner:
+      status: blocked
+      reason: Validation is missing.
+    executor:
+      status: action_required
+      reason: Provide validation evidence.
+    consumer:
+      status: waiting
+      reason: Review is scheduled, but acceptance depends on validation.
