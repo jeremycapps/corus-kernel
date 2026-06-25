@@ -1,0 +1,34 @@
+coordination_state:
+  workflow: workstream.client_homepage_update
+  objective: objective.client_homepage_update.review_ready
+
+  current:
+    tasks/update-hero-layout/status: client_feedback_requested
+    meetings/client-review/status: scheduled
+    evidence/customer_export/version: 3LgexampleVersion
+
+  missing: []
+
+  blocked: []
+
+  ready:
+    - meetings/client-review/status
+    - evidence/customer_export/version
+
+  next_actions:
+    - role: consumer
+      action: review_customer_export
+      reason: Homepage update is ready for customer review and supporting evidence is present.
+      evidence_required: false
+      authority_required: false
+
+  role_attention:
+    owner:
+      status: progressing
+      reason: Review is scheduled and evidence is present.
+    executor:
+      status: waiting
+      reason: Customer feedback has been requested.
+    consumer:
+      status: action_required
+      reason: Review the customer export.
