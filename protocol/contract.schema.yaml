@@ -1,0 +1,43 @@
+schema: corus.contract
+version: 1.0.0
+status: v1
+
+summary: Defines role expectations for a coordination workflow.
+
+required_root_key: contracts
+
+contracts:
+  type: list
+  item_schema: contract
+
+contract:
+  required:
+    - id
+    - role
+    - expects
+  fields:
+    id:
+      type: string
+      required: true
+      description: Stable contract id.
+    role:
+      type: string
+      required: true
+      description: Role responsible for this expectation.
+    question:
+      type: string
+      required: false
+      description: Role question this contract supports.
+    expects:
+      type: list
+      required: true
+      description: Libera paths expected by this role.
+    required_for:
+      type: string
+      required: false
+      description: Coordination condition this contract supports.
+
+rules:
+  - Contract names expected state, not observed state.
+  - Contract may reference Libera paths.
+  - Contract does not create Timpos moments.
