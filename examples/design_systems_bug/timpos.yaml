@@ -1,0 +1,12 @@
+timpos:
+  - id: timpo.001
+    t: 2026-06-23T09:12:00-04:00
+    p: acme.slack://locate?scope=channel:design-systems&resource=thread:1749832211&selector=message:001
+
+  - id: timpo.002
+    t: 2026-06-23T09:47:00-04:00
+    p: acme.jira://locate?scope=project:DS&resource=issue:482&selector=field:status
+
+  - id: timpo.003
+    t: 2026-06-23T10:15:00-04:00
+    p: acme.email://locate?scope=inbox:design-systems&resource=message:filter-dropdown-review&selector=calendar:invite
