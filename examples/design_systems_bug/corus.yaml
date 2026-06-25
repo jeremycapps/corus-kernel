@@ -1,0 +1,51 @@
+corus:
+  version: 1.0.0
+  workflow: design_systems_bug_intake
+
+  objective:
+    id: objective.design_systems_bug_intake.validated_fix
+    question: Is this bug ready to move from report to validated fix?
+
+  roles:
+    owner:
+      label: Owner
+      question: Is the workstream aligned and progressing?
+    executor:
+      label: Executor
+      question: What work must be done next?
+    consumer:
+      label: Consumer
+      question: What needs review or acceptance?
+
+  contracts:
+    - id: contract.owner.progress
+      role: owner
+      expects:
+        - boundary/request
+        - movement/task
+        - governance/review
+      required_for: coordination
+
+    - id: contract.executor.work
+      role: executor
+      expects:
+        - movement/task
+        - exception/validation
+      required_for: execution
+
+    - id: contract.consumer.review
+      role: consumer
+      expects:
+        - governance/review
+        - exception/validation
+      required_for: acceptance
+
+  reducers:
+    - id: reducer.missing_required_paths
+      type: missing_paths
+    - id: reducer.blocked_by_missing_validation
+      type: blocker
+    - id: reducer.role_attention
+      type: role_attention
+    - id: reducer.next_action
+      type: next_action
