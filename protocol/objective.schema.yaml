@@ -1,0 +1,42 @@
+schema: corus.objective
+version: 1.0.0
+status: v1
+
+summary: Defines a coordination objective.
+
+required_root_key: objective
+
+objective:
+  required:
+    - id
+    - workflow
+    - question
+  fields:
+    id:
+      type: string
+      required: true
+      description: Stable objective id.
+    workflow:
+      type: string
+      required: true
+      description: Workstream id.
+    subject:
+      type:
+        - string
+        - null
+      required: false
+      description: Optional workstream subject.
+    question:
+      type: string
+      required: true
+      description: Coordination question Corus should answer.
+    success_when:
+      type: list
+      required: false
+      description: Conditions for coordinated enough.
+
+rules:
+  - Objective names the coordination question.
+  - Objective does not define source locators.
+  - Objective does not record observations.
+  - Objective does not render final surfaces.
