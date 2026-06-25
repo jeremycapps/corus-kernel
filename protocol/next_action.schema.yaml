@@ -1,0 +1,51 @@
+schema: corus.next_action
+version: 1.0.0
+status: v1
+
+summary: Defines next actions derived from coordination state.
+
+required_root_key: next_actions
+
+next_actions:
+  type: list
+  item_schema: next_action
+
+next_action:
+  required:
+    - role
+    - action
+    - reason
+  fields:
+    role:
+      type: string
+      required: true
+      description: Role that should receive the action.
+    action:
+      type: string
+      required: true
+      description: Smallest adequate next action.
+    reason:
+      type: string
+      required: true
+      description: Why this action is needed.
+    blocked_by:
+      type: list
+      required: false
+      description: Blocking paths or requirements.
+    unblocks:
+      type: list
+      required: false
+      description: Paths or requirements this action may unblock.
+    evidence_required:
+      type: boolean
+      required: false
+      description: Whether evidence is required before the action can close.
+    authority_required:
+      type: boolean
+      required: false
+      description: Whether authority is required before the action can close.
+
+rules:
+  - Next actions are derived from coordination state.
+  - Next actions must be connected to current, missing, blocked, or ready state.
+  - Next actions do not mutate state directly.
