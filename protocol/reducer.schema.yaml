@@ -1,0 +1,46 @@
+schema: corus.reducer
+version: 1.0.0
+status: v1
+
+summary: Defines deterministic coordination reducers over replayed workstream state.
+
+required_root_key: reducers
+
+reducers:
+  type: list
+  item_schema: reducer
+
+reducer:
+  required:
+    - id
+    - type
+  fields:
+    id:
+      type: string
+      required: true
+      description: Stable reducer id.
+    type:
+      type: string
+      required: true
+      description: Reducer kind.
+      allowed:
+        - missing_paths
+        - blocker
+        - readiness
+        - next_action
+        - role_attention
+        - diff
+    inputs:
+      type: list
+      required: false
+      description: Paths, contracts, or coordination state sections read by the reducer.
+    emits:
+      type: list
+      required: false
+      description: Coordination state sections produced by the reducer.
+
+rules:
+  - Reducers derive from replayed state.
+  - Reducers must be deterministic.
+  - Reducers do not retrieve sources.
+  - Reducers do not record moments.
