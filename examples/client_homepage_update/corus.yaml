@@ -1,0 +1,47 @@
+corus:
+  version: 1.0.0
+  workflow: workstream.client_homepage_update
+
+  objective:
+    id: objective.client_homepage_update.review_ready
+    question: Is the homepage update ready for customer review?
+
+  roles:
+    owner:
+      label: Owner
+      question: Is the workstream aligned and progressing?
+    executor:
+      label: Executor
+      question: What work must be done next?
+    consumer:
+      label: Consumer
+      question: What needs review or acceptance?
+
+  contracts:
+    - id: contract.owner.progress
+      role: owner
+      expects:
+        - tasks/update-hero-layout/status
+        - meetings/client-review/status
+      required_for: coordination
+
+    - id: contract.executor.work
+      role: executor
+      expects:
+        - tasks/update-hero-layout/status
+      required_for: execution
+
+    - id: contract.consumer.review
+      role: consumer
+      expects:
+        - meetings/client-review/status
+        - evidence/customer_export/version
+      required_for: review
+
+  reducers:
+    - id: reducer.missing_required_paths
+      type: missing_paths
+    - id: reducer.ready_for_review
+      type: readiness
+    - id: reducer.next_action
+      type: next_action
