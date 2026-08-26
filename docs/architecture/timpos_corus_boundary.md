@@ -56,11 +56,14 @@ Allowed dependency direction:
 demo -> corus_v1
 demo -> timpos
 demo -> fasia
-fasia -> corus_v1
-fasia -> timpos, only when replay trace is needed
 corus_v1 -> timpos only through adapter-shaped data
 timpos -> standard library only
 ```
+
+Fasia imports nothing from the other layers. Corus flow, node states, artifact
+statuses, admitted sources, and active objectives all arrive as explicit
+arguments, so Fasia stays deterministic over inputs it did not fetch. Data
+flows `corus_v1 -> fasia`; imports do not.
 
 Forbidden direction:
 
@@ -70,10 +73,16 @@ timpos -> demo
 timpos -> fasia
 corus_v1 -> demo
 corus_v1 -> fasia
+fasia -> corus_v1
+fasia -> timpos
 fasia -> demo
 fasia -> UI components
 fasia -> agent runtime behavior
 ```
+
+Enforced by `test_fasia_consumes_readiness_only_through_explicit_inputs`,
+`test_corus_v1_does_not_import_fasia`, `test_timpos_has_no_corus_imports`, and
+`test_timpos_has_no_demo_imports`.
 
 ## 3. Eventual Repo Split Criteria
 
@@ -253,8 +262,8 @@ Implement shows what can be produced.
 Validate shows what can be accepted or rejected.
 
 Agents, commands, APIs, and renderers can consume Fasia packets. `corus_v1`
-must not import `fasia`. `fasia` must not import demo or agent runtime
-behavior.
+must not import `fasia`. `fasia` must not import `corus_v1`, `timpos`, demo, or
+agent runtime behavior; it receives flow and state as explicit arguments.
 
 Fasia invariants:
 
@@ -353,7 +362,7 @@ corus_v1 has no demo imports
 corus_v1 still derives from declared artifact statuses without timpos
 corus_v1 can consume replay output through replay_adapter
 fasia contextualizes with Relations and emits Objective / Implement / Validate packets
-fasia does not import demo or runtime behavior
+fasia does not import corus_v1, timpos, demo, or runtime behavior
 demo can use both timpos and corus_v1 without changing reducer output
 ```
 

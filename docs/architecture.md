@@ -94,9 +94,13 @@ These are intentionally absent from v0:
 - **Commit** — artifact commit history
 - **resolution_state** — named outcomes beyond default coordination
 - **focus/purpose enum** — purpose-driven selection
-- **Surface rendering** — derived visual surfaces
 - **state_rule** — custom reducers
 - **Timpo physical/executional encoding** — beyond logical integers
 - **Data Scientist role extension** — model/data artifacts
+
+Surface rendering has since shipped outside the kernel and the term was
+retired: structured views are Fasia packets, and the plain English readout is
+`corus_agents/surface_agent.py`. `"surface"` remains forbidden as a kernel
+object key.
 
 See [ROADMAP.md](../ROADMAP.md).
